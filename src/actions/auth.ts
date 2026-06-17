@@ -23,7 +23,12 @@ export async function registerUser({
 
   if (error) return { error: error.message }
 
-  await notifyAdminNewRequest({ userName: fullName, userEmail: email })
+  // The account is already created; a failed notification must not fail signup.
+  try {
+    await notifyAdminNewRequest({ userName: fullName, userEmail: email })
+  } catch (err) {
+    console.error('Failed to notify admin of new access request:', err)
+  }
 
   return {}
 }

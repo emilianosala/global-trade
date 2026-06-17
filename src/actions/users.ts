@@ -59,10 +59,15 @@ export async function approveUser(userId: string): Promise<{ error?: string }> {
 
     if (error) return { error: error.message }
 
-    await notifyUserApproved({
-      name: target.full_name ?? target.email,
-      email: target.email,
-    })
+    // Status is already updated; a failed email must not fail the approval.
+    try {
+      await notifyUserApproved({
+        name: target.full_name ?? target.email,
+        email: target.email,
+      })
+    } catch (err) {
+      console.error(`Failed to send approval email to ${target.email}:`, err)
+    }
 
     return {}
   } catch (err) {
@@ -89,10 +94,15 @@ export async function rejectUser(userId: string): Promise<{ error?: string }> {
 
     if (error) return { error: error.message }
 
-    await notifyUserRejected({
-      name: target.full_name ?? target.email,
-      email: target.email,
-    })
+    // Status is already updated; a failed email must not fail the rejection.
+    try {
+      await notifyUserRejected({
+        name: target.full_name ?? target.email,
+        email: target.email,
+      })
+    } catch (err) {
+      console.error(`Failed to send rejection email to ${target.email}:`, err)
+    }
 
     return {}
   } catch (err) {
@@ -102,7 +112,14 @@ export async function rejectUser(userId: string): Promise<{ error?: string }> {
 
 export async function deleteUser(userId: string): Promise<{ error?: string }> {
   try {
-    await requireAdmin()
+    const supabase = await requireAdmin()
+
+    // Prevent an admin from deleting their own account.
+    const { data: { user } } = await supabase.auth.getUser()
+    if (user?.id === userId) {
+      return { error: 'No podés eliminar tu propia cuenta de administrador.' }
+    }
+
     const admin = createAdminClient()
     const { error } = await admin.auth.admin.deleteUser(userId)
     if (error) return { error: error.message }
