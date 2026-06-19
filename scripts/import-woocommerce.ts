@@ -91,6 +91,7 @@ interface WooRow {
   'Short description': string
   'Regular price': string
   Categories: string
+  Images: string
 }
 
 async function main() {
@@ -131,6 +132,9 @@ async function main() {
     const description =
       row.Description?.trim() || row['Short description']?.trim() || null
 
+    // WooCommerce lists images as comma-separated URLs; use the first as primary.
+    const imageUrl = (row.Images ?? '').split(',')[0].trim() || null
+
     const { error } = await supabase.from('products').upsert(
       {
         sku: row.SKU,
@@ -138,6 +142,7 @@ async function main() {
         description,
         price,
         category_id: categoryId,
+        image_url: imageUrl,
       },
       { onConflict: 'sku' }
     )

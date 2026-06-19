@@ -25,6 +25,10 @@ export interface Product {
   description: string | null
   /** null when the caller is not an approved user or admin */
   price: number | null
+  image_url: string | null
+  /** admin-curated flags driving the home "destacados" / "más vendidos" sections */
+  is_featured: boolean
+  is_bestseller: boolean
   category_id: string | null
   created_at: string
   updated_at: string

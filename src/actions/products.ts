@@ -12,11 +12,15 @@ import type { Product } from '@/lib/types'
 export async function getProducts(opts?: {
   categoryId?: string
   productId?: string
+  featured?: boolean
+  bestseller?: boolean
 }): Promise<{ data?: Product[]; error?: string }> {
   const supabase = await createClient()
   const { data, error } = await supabase.rpc('get_products', {
     p_category_id: opts?.categoryId ?? null,
     p_product_id: opts?.productId ?? null,
+    p_featured: opts?.featured ?? null,
+    p_bestseller: opts?.bestseller ?? null,
   })
   if (error) return { error: error.message }
   return { data: data as Product[] }
@@ -28,6 +32,9 @@ export async function createProduct(product: {
   description?: string
   price: number
   categoryId?: string
+  imageUrl?: string
+  isFeatured?: boolean
+  isBestseller?: boolean
 }): Promise<{ data?: Product; error?: string }> {
   try {
     const supabase = await requireAdmin()
@@ -39,6 +46,9 @@ export async function createProduct(product: {
         description: product.description ?? null,
         price: product.price,
         category_id: product.categoryId ?? null,
+        image_url: product.imageUrl ?? null,
+        is_featured: product.isFeatured ?? false,
+        is_bestseller: product.isBestseller ?? false,
       })
       .select()
       .single()
@@ -57,6 +67,9 @@ export async function updateProduct(
     description: string
     price: number
     categoryId: string
+    imageUrl: string
+    isFeatured: boolean
+    isBestseller: boolean
   }>
 ): Promise<{ data?: Product; error?: string }> {
   try {
@@ -64,11 +77,14 @@ export async function updateProduct(
     const { data, error } = await supabase
       .from('products')
       .update({
-        ...(patch.sku        !== undefined && { sku: patch.sku }),
-        ...(patch.name       !== undefined && { name: patch.name }),
-        ...(patch.description !== undefined && { description: patch.description }),
-        ...(patch.price      !== undefined && { price: patch.price }),
-        ...(patch.categoryId !== undefined && { category_id: patch.categoryId }),
+        ...(patch.sku          !== undefined && { sku: patch.sku }),
+        ...(patch.name         !== undefined && { name: patch.name }),
+        ...(patch.description  !== undefined && { description: patch.description }),
+        ...(patch.price        !== undefined && { price: patch.price }),
+        ...(patch.categoryId   !== undefined && { category_id: patch.categoryId }),
+        ...(patch.imageUrl     !== undefined && { image_url: patch.imageUrl }),
+        ...(patch.isFeatured   !== undefined && { is_featured: patch.isFeatured }),
+        ...(patch.isBestseller !== undefined && { is_bestseller: patch.isBestseller }),
       })
       .eq('id', id)
       .select()
