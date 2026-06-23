@@ -8,7 +8,7 @@
  * The source export from WooCommerce has Spanish column headers and messy data:
  *   - The SKU lives at the start of the "Nombre" as an `ML####` code (e.g.
  *     "ML0102 Reel Reelskings TM10000"); the dedicated SKU column is often empty.
- *   - Most rows have no price.
+ *   - The real price is the wholesale meta column, not "Precio normal".
  *   - A handful of rows have no recognizable code at all.
  *
  * This script produces a clean CSV with ENGLISH headers that match exactly what
@@ -19,7 +19,7 @@
  *   - SKU: extract the leading `ML####` code from the name and use it as SKU.
  *          Rows with no such code get a sequential placeholder SIN-SKU-1, -2, …
  *   - Name: strip the extracted `ML####` code so the catalog shows a clean name.
- *   - Price: empty / non-numeric → 0.
+ *   - Price: read from the wholesale meta column; empty / non-numeric → 0.
  *   - Categories: WooCommerce separates assigned categories with commas and
  *     escapes commas that are part of a category name as `\,`. We split on
  *     unescaped commas, unescape, and keep the first (most specific) path.
@@ -36,6 +36,9 @@ interface WooEsRow {
   Descripción: string
   'Descripción corta': string
   'Precio normal': string
+  // Real (wholesale) price lives in this WooCommerce meta column, not "Precio
+  // normal" (which is empty/0 across the export). Uses a comma decimal (es-AR).
+  'Meta: wholesale_customer_wholesale_price': string
   Categorías: string
   Imágenes: string
 }
@@ -117,8 +120,11 @@ function main() {
       seenSkus.set(sku, name)
     }
 
-    // Price: empty / non-numeric → 0.
-    const rawPrice = parseFloat((row['Precio normal'] ?? '').replace(',', '.'))
+    // Price comes from the wholesale meta column (es-AR comma decimal).
+    // Empty / non-numeric → 0.
+    const rawPrice = parseFloat(
+      (row['Meta: wholesale_customer_wholesale_price'] ?? '').replace(',', '.')
+    )
     const price = Number.isFinite(rawPrice) ? String(rawPrice) : '0'
 
     out.push(
