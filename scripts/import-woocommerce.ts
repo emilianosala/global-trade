@@ -124,10 +124,9 @@ async function main() {
     const rawPrice = parseFloat(row['Regular price'])
     const price = isNaN(rawPrice) ? null : rawPrice
 
-    // WooCommerce may list multiple category paths separated by commas.
-    // We use the first (most specific) path only.
-    const firstCategoryPath = (row.Categories ?? '').split(',')[0]
-    const categoryId = await resolveCategory(firstCategoryPath, categoryCache)
+    // The clean step (clean-woocommerce-csv.ts) already resolved each product
+    // to a single "Parent > Child" category path, so we use it as-is.
+    const categoryId = await resolveCategory(row.Categories ?? '', categoryCache)
 
     const description =
       row.Description?.trim() || row['Short description']?.trim() || null
