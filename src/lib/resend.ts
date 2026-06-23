@@ -58,3 +58,52 @@ export async function notifyUserRejected({
     `,
   })
 }
+
+/** Escape user-provided text before interpolating it into the email HTML. */
+function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+}
+
+/**
+ * Forwards a contact-form submission to the admin inbox. Reply-To is set to the
+ * sender so the admin can answer the message with a plain reply.
+ */
+export async function sendContactMessage({
+  name,
+  email,
+  phone,
+  company,
+  message,
+}: {
+  name: string
+  email: string
+  phone?: string
+  company?: string
+  message: string
+}) {
+  const rows = [
+    ['Nombre', name],
+    ['Email', email],
+    ['Teléfono', phone],
+    ['Empresa', company],
+  ]
+    .filter(([, value]) => value)
+    .map(([label, value]) => `<p><strong>${label}:</strong> ${escapeHtml(value!)}</p>`)
+    .join('')
+
+  await resend.emails.send({
+    from: FROM,
+    to: ADMIN_EMAIL,
+    replyTo: email,
+    subject: `Nuevo mensaje de contacto — ${name}`,
+    html: `
+      ${rows}
+      <p><strong>Mensaje:</strong></p>
+      <p>${escapeHtml(message).replace(/\n/g, '<br>')}</p>
+    `,
+  })
+}
