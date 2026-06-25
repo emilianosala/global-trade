@@ -7,16 +7,32 @@ const ADMIN_EMAIL = process.env.ADMIN_EMAIL!
 export async function notifyAdminNewRequest({
   userName,
   userEmail,
+  phone,
+  city,
+  businessType,
 }: {
   userName: string
   userEmail: string
+  phone?: string
+  city?: string
+  businessType?: string
 }) {
+  const extra = [
+    ['Teléfono', phone],
+    ['Ciudad', city],
+    ['Tipo de negocio', businessType],
+  ]
+    .filter(([, value]) => value)
+    .map(([label, value]) => `<p><strong>${label}:</strong> ${escapeHtml(value!)}</p>`)
+    .join('')
+
   await resend.emails.send({
     from: FROM,
     to: ADMIN_EMAIL,
     subject: 'Nueva solicitud de acceso — Global Trade',
     html: `
-      <p>El usuario <strong>${userName}</strong> (${userEmail}) solicitó acceso al catálogo.</p>
+      <p>El usuario <strong>${escapeHtml(userName)}</strong> (${escapeHtml(userEmail)}) solicitó acceso al catálogo.</p>
+      ${extra}
       <p>Ingresá al panel de administración para aprobar o rechazar la solicitud.</p>
     `,
   })

@@ -1,10 +1,17 @@
 export type UserStatus = 'pending' | 'approved' | 'rejected'
 export type UserRole = 'user' | 'admin'
+export type BusinessType =
+  | 'pesca_camping_aventura'
+  | 'otro_negocio'
+  | 'consumidor_final'
 
 export interface Profile {
   id: string
   email: string
   full_name: string | null
+  phone: string | null
+  city: string | null
+  business_type: BusinessType | null
   status: UserStatus
   role: UserRole
   created_at: string

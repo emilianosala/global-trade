@@ -2,30 +2,50 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { notifyAdminNewRequest } from '@/lib/resend'
-import type { Profile } from '@/lib/types'
+import { businessTypeLabel } from '@/lib/business'
+import type { BusinessType, Profile } from '@/lib/types'
 
 export async function registerUser({
   email,
   password,
   fullName,
+  phone,
+  city,
+  businessType,
 }: {
   email: string
   password: string
   fullName: string
+  phone?: string
+  city?: string
+  businessType?: BusinessType
 }): Promise<{ error?: string }> {
   const supabase = await createClient()
 
   const { error } = await supabase.auth.signUp({
     email,
     password,
-    options: { data: { full_name: fullName } },
+    options: {
+      data: {
+        full_name: fullName,
+        phone: phone ?? '',
+        city: city ?? '',
+        business_type: businessType ?? '',
+      },
+    },
   })
 
   if (error) return { error: error.message }
 
   // The account is already created; a failed notification must not fail signup.
   try {
-    await notifyAdminNewRequest({ userName: fullName, userEmail: email })
+    await notifyAdminNewRequest({
+      userName: fullName,
+      userEmail: email,
+      phone,
+      city,
+      businessType: businessType ? businessTypeLabel(businessType) : undefined,
+    })
   } catch (err) {
     console.error('Failed to notify admin of new access request:', err)
   }
@@ -58,7 +78,7 @@ export async function getProfile(): Promise<{ data?: Profile; error?: string }> 
 
   const { data, error } = await supabase
     .from('profiles')
-    .select('id, email, full_name, status, role, created_at')
+    .select('id, email, full_name, phone, city, business_type, status, role, created_at')
     .eq('id', user.id)
     .single()
 
