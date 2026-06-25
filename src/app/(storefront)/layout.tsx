@@ -2,6 +2,7 @@ import { getProfile } from "@/actions/auth";
 import { getCategories } from "@/actions/categories";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
+import { WhatsappFab } from "@/components/layout/WhatsappFab";
 import { buildNav } from "@/lib/nav";
 
 /**
@@ -27,6 +28,7 @@ export default async function StorefrontLayout({
       <Header loggedIn={loggedIn} categories={nav} />
       {children}
       <Footer />
+      <WhatsappFab />
     </div>
   );
 }

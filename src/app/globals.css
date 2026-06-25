@@ -109,6 +109,18 @@ body { font-family: var(--font-brand); }
 /* Ficha de producto: imagen + info */
 .gt-detail { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; align-items: start; }
 
+/* Botón flotante de WhatsApp */
+.gt-wa {
+  position: fixed; right: 22px; bottom: 22px; z-index: 50;
+  width: 56px; height: 56px; border-radius: 50%;
+  background: #25D366; color: #fff;
+  display: inline-flex; align-items: center; justify-content: center;
+  box-shadow: 0 6px 20px rgba(0,0,0,.4);
+  transition: transform var(--dur-base) var(--ease-standard), box-shadow var(--dur-base) var(--ease-standard);
+}
+.gt-wa:hover { transform: scale(1.07); box-shadow: 0 10px 26px rgba(37,211,102,.5); }
+@media (max-width: 480px) { .gt-wa { right: 16px; bottom: 16px; width: 52px; height: 52px; } }
+
 @media (max-width: 1080px) {
   .gt-prod-grid { grid-template-columns: repeat(3, 1fr); }
   .gt-catalog { grid-template-columns: 220px 1fr; gap: 24px; }
