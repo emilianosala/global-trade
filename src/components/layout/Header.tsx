@@ -9,7 +9,7 @@ import type { NavCategory } from '@/lib/nav';
 
 export type { NavCategory, NavSubcategory } from '@/lib/nav';
 
-const LOGO = '/design/logo-blanco.png';
+const LOGO = '/design/logo-blanco-trim.png';
 
 export function Header({
   loggedIn,

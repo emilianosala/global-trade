@@ -2,7 +2,7 @@ import React from "react";
 import Link from "next/link";
 import * as Icon from "@/components/ui/Icons";
 
-const LOGO = "/design/logo-blanco.png";
+const LOGO = "/design/logo-blanco-trim.png";
 
 const COLS: [string, string[]][] = [
   ["Pesca", ["Reeles", "Señuelos", "Anzuelos", "Accesorios"]],
