@@ -15,7 +15,7 @@ export function Hero({ approved }: { approved: boolean }) {
         <h1 className="gt-hero-title" style={{ margin: 0, fontFamily: "var(--font-brand)", fontWeight: 900, lineHeight: 1.02, letterSpacing: "-.01em", textTransform: "uppercase", color: "#fff", maxWidth: "17ch" }}>Tu socio estratégico en pesca, camping y viajes</h1>
         <p className="gt-hero-sub" style={{ margin: 0, color: "var(--gt-gray-light)", lineHeight: 1.5, maxWidth: "50ch" }}>Envíos a todo el país. Reponé tu mostrador con el catálogo mayorista completo.</p>
         <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginTop: 4 }}>
-          <Button href="#novedades" variant="primary" size="lg" iconRight={<Icon.ArrowRight size={18} />}>Ver catálogo</Button>
+          <Button href="/productos" variant="primary" size="lg" iconRight={<Icon.ArrowRight size={18} />}>Ver catálogo</Button>
           {!approved && <Button href="/ingresar" variant="secondary" size="lg">Iniciá sesión para ver precios</Button>}
         </div>
       </div>
