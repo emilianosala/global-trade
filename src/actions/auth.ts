@@ -22,7 +22,7 @@ export async function registerUser({
 }): Promise<{ error?: string }> {
   const supabase = await createClient()
 
-  const { error } = await supabase.auth.signUp({
+  const { data, error } = await supabase.auth.signUp({
     email,
     password,
     options: {
@@ -36,6 +36,13 @@ export async function registerUser({
   })
 
   if (error) return { error: error.message }
+
+  // Con protección anti-enumeración activada, Supabase NO devuelve error cuando el
+  // email ya existe: responde OK pero con `identities` vacío y sin crear nada. Lo
+  // detectamos para avisar al usuario en vez de mostrar un falso "cuenta creada".
+  if (data.user && data.user.identities && data.user.identities.length === 0) {
+    return { error: 'User already registered' }
+  }
 
   // The account is already created; a failed notification must not fail signup.
   try {
