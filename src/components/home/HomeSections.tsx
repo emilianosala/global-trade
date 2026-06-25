@@ -1,6 +1,5 @@
 import React from "react";
 import Link from "next/link";
-import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import * as Icon from "@/components/ui/Icons";
 import { ProductCard } from "@/components/product/ProductCard";
@@ -13,7 +12,6 @@ export function Hero({ approved }: { approved: boolean }) {
       <img src="/design/images/campfire-night.png" alt="" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", opacity: .5 }} />
       <div style={{ position: "absolute", inset: 0, background: "linear-gradient(90deg, rgba(0,0,0,.9) 0%, rgba(0,0,0,.5) 55%, rgba(0,0,0,.2) 100%)" }} />
       <div className="gt-container" style={{ position: "relative", display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 20, padding: "clamp(52px,9vw,104px) 24px" }}>
-        <Badge variant="accent">Top 5 · Junio</Badge>
         <h1 className="gt-hero-title" style={{ margin: 0, fontFamily: "var(--font-brand)", fontWeight: 900, lineHeight: 1.02, letterSpacing: "-.01em", textTransform: "uppercase", color: "#fff", maxWidth: "17ch" }}>Tu socio estratégico en pesca, camping y viajes</h1>
         <p className="gt-hero-sub" style={{ margin: 0, color: "var(--gt-gray-light)", lineHeight: 1.5, maxWidth: "50ch" }}>Envíos a todo el país. Reponé tu mostrador con el catálogo mayorista completo.</p>
         <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginTop: 4 }}>

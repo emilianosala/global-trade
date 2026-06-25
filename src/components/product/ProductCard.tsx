@@ -154,19 +154,8 @@ export function ProductCard({
               <Button variant="primary" size="sm" fullWidth onClick={() => router.push(href)}>Ver producto</Button>
             </div>
           ) : (
-            <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-              <div style={{
-                display: "flex", alignItems: "center", gap: "8px",
-                color: "var(--text-muted)", fontSize: "13px", fontWeight: 600,
-                padding: "10px 12px", background: "var(--gt-charcoal)",
-                border: "var(--border-width) dashed var(--border-dark)", borderRadius: "var(--radius-2)",
-              }}>
-                <LockIcon size={15} />
-                <span>Iniciá sesión para ver precios</span>
-              </div>
-              <Button variant="primary" size="sm" fullWidth onClick={() => router.push(loginHref)}
-                iconLeft={<LockIcon size={14} />}>Iniciá sesión</Button>
-            </div>
+            <Button variant="primary" size="sm" fullWidth onClick={() => router.push(loginHref)}
+              iconLeft={<LockIcon size={14} />}>Ver precios</Button>
           )}
         </div>
       </div>

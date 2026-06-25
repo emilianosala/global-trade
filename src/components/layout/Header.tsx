@@ -32,13 +32,6 @@ export function Header({
 
   return (
     <header style={{ position: "sticky", top: 0, zIndex: 40 }} onMouseLeave={() => setOpenCat(null)}>
-      <div style={{ background: "var(--gt-black)", color: "var(--gt-gray)", fontSize: 12.5 }}>
-        <div className="gt-container" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 24px" }}>
-          <span style={{ display: "inline-flex", alignItems: "center", gap: 7 }}><Icon.MapPin size={14} /> Envíos a todo el país</span>
-          <span className="gt-hide-mobile" style={{ letterSpacing: ".06em", textTransform: "uppercase", fontWeight: 700 }}>Catálogo mayorista · B2B</span>
-        </div>
-      </div>
-
       <div style={{ background: "var(--gt-charcoal)", borderBottom: "1px solid var(--border-dark)" }}>
         <div className="gt-container" style={{ display: "flex", alignItems: "center", gap: 22, padding: "14px 24px" }}>
           <button className="gt-only-mobile" onClick={() => setDrawer(true)} aria-label="Menú" style={{ background: "none", border: "none", color: "#fff", cursor: "pointer" }}><Icon.Menu size={26} /></button>
@@ -63,7 +56,7 @@ export function Header({
             {categories.map((c) => (
               <Link key={c.key} href={c.href} onMouseEnter={() => setOpenCat(c.key)} style={{ textDecoration: "none", padding: "14px 18px", fontFamily: "var(--font-brand)", fontWeight: 700, fontSize: 13, letterSpacing: ".06em", textTransform: "uppercase", color: openCat === c.key ? "#fff" : "var(--text-body)", borderBottom: `3px solid ${openCat === c.key ? "var(--gt-orange)" : "transparent"}` }}>{c.name}</Link>
             ))}
-            <span style={{ marginLeft: "auto", display: "flex", alignItems: "center", color: "var(--text-muted)", fontSize: 12.5 }}>Mayoristas · pedido mínimo por unidad</span>
+            <span style={{ marginLeft: "auto", display: "inline-flex", alignItems: "center", gap: 7, color: "var(--text-muted)", fontSize: 12.5 }}><Icon.MapPin size={14} /> Envíos a todo el país</span>
 
             {openCat && (() => {
               const c = categories.find((x) => x.key === openCat);
