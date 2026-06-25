@@ -4,6 +4,7 @@ import React from "react";
 import { useRouter } from "next/navigation";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
+import { formatARS } from "@/lib/format";
 
 /* Lucide-style lock glyph (kept inline so the card is self-contained) */
 function LockIcon({ size = 16 }: { size?: number }) {
@@ -14,16 +15,6 @@ function LockIcon({ size = 16 }: { size?: number }) {
       <path d="M7 11V7a5 5 0 0 1 10 0v4" />
     </svg>
   );
-}
-
-function formatARS(value: number) {
-  try {
-    return new Intl.NumberFormat("es-AR", {
-      style: "currency", currency: "ARS", maximumFractionDigits: 0,
-    }).format(value);
-  } catch {
-    return "$ " + value;
-  }
 }
 
 /**
