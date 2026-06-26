@@ -13,7 +13,7 @@ export async function listAllUsers(): Promise<{
     const supabase = await requireAdmin()
     const { data, error } = await supabase
       .from('profiles')
-      .select('id, email, full_name, status, role, created_at')
+      .select('id, email, full_name, phone, city, business_type, status, role, created_at')
       .order('created_at', { ascending: false })
     if (error) return { error: error.message }
     return { data: (data ?? []) as Profile[] }
