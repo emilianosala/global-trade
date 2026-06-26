@@ -57,11 +57,16 @@ export default async function CuentaPage() {
           </div>
           <div style={{ color: "#fff", fontWeight: 700, fontSize: 17, marginBottom: 6 }}>{isAdmin ? "Cuenta de administrador" : s.title}</div>
           <p style={{ margin: 0, color: "var(--text-body)", fontSize: 14.5, lineHeight: 1.55 }}>{isAdmin ? "Tenés acceso completo al catálogo y al panel de administración." : s.text}</p>
-          {(profile.status === "approved" || isAdmin) && (
+          {isAdmin ? (
+            <div style={{ marginTop: 16, display: "flex", gap: 10, flexWrap: "wrap" }}>
+              <Button href="/admin" variant="primary" size="sm" iconLeft={<Icon.LayoutGrid size={16} />}>Ir al panel admin</Button>
+              <Button href="/productos" variant="secondary" size="sm">Ver catálogo</Button>
+            </div>
+          ) : profile.status === "approved" ? (
             <div style={{ marginTop: 16 }}>
               <Button href="/productos" variant="primary" size="sm" iconRight={<Icon.ArrowRight size={16} />}>Ver catálogo</Button>
             </div>
-          )}
+          ) : null}
         </div>
 
         {/* Datos */}
