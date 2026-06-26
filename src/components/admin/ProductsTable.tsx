@@ -14,6 +14,7 @@ const PER_PAGE = 20;
 export function ProductsTable({ products, categories }: { products: Product[]; categories: Category[] }) {
   const router = useRouter();
   const [q, setQ] = React.useState("");
+  const [flag, setFlag] = React.useState<"all" | "featured" | "bestseller">("all");
   const [page, setPage] = React.useState(1);
   const [pending, startTransition] = React.useTransition();
   const [busyId, setBusyId] = React.useState<string | null>(null);
@@ -25,19 +26,30 @@ export function ProductsTable({ products, categories }: { products: Product[]; c
   );
 
   const filtered = React.useMemo(() => {
+    let list = products;
+    if (flag === "featured") list = list.filter((p) => p.is_featured);
+    else if (flag === "bestseller") list = list.filter((p) => p.is_bestseller);
     const s = q.trim().toLowerCase();
-    if (!s) return products;
-    return products.filter(
-      (p) => p.name.toLowerCase().includes(s) || (p.sku ?? "").toLowerCase().includes(s),
-    );
-  }, [products, q]);
+    if (s) {
+      list = list.filter(
+        (p) => p.name.toLowerCase().includes(s) || (p.sku ?? "").toLowerCase().includes(s),
+      );
+    }
+    return list;
+  }, [products, q, flag]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PER_PAGE));
   const current = Math.min(page, totalPages);
   const start = (current - 1) * PER_PAGE;
   const rows = filtered.slice(start, start + PER_PAGE);
 
-  React.useEffect(() => { setPage(1); }, [q]);
+  React.useEffect(() => { setPage(1); }, [q, flag]);
+
+  const counts = React.useMemo(() => ({
+    all: products.length,
+    featured: products.filter((p) => p.is_featured).length,
+    bestseller: products.filter((p) => p.is_bestseller).length,
+  }), [products]);
 
   function act(id: string, fn: () => Promise<{ error?: string }>) {
     setError(null);
@@ -63,6 +75,12 @@ export function ProductsTable({ products, categories }: { products: Product[]; c
           <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Buscar por nombre o SKU…" style={{ flex: 1, background: "transparent", border: "none", outline: "none", color: "#fff", fontFamily: "var(--font-brand)", fontSize: 14 }} />
         </div>
         <span style={{ color: "var(--text-muted)", fontSize: 13 }}>{filtered.length} producto{filtered.length === 1 ? "" : "s"}</span>
+      </div>
+
+      <div style={{ display: "flex", gap: 8, marginBottom: 16, flexWrap: "wrap" }}>
+        <FilterChip active={flag === "all"} onClick={() => setFlag("all")}>Todos ({counts.all})</FilterChip>
+        <FilterChip active={flag === "featured"} onClick={() => setFlag("featured")}>Destacados ({counts.featured})</FilterChip>
+        <FilterChip active={flag === "bestseller"} onClick={() => setFlag("bestseller")}>Más vendidos ({counts.bestseller})</FilterChip>
       </div>
 
       {error && <div style={{ color: "#E57373", fontSize: 13, marginBottom: 12 }}>{error}</div>}
@@ -114,6 +132,18 @@ export function ProductsTable({ products, categories }: { products: Product[]; c
         </div>
       )}
     </div>
+  );
+}
+
+function FilterChip({ active, onClick, children }: { active: boolean; onClick: () => void; children: React.ReactNode }) {
+  return (
+    <button onClick={onClick} style={{
+      height: 34, padding: "0 14px", borderRadius: "var(--radius-2)", cursor: "pointer",
+      fontFamily: "var(--font-brand)", fontSize: 13, fontWeight: 700,
+      border: `1px solid ${active ? "var(--gt-orange)" : "var(--border-dark)"}`,
+      background: active ? "var(--gt-orange)" : "transparent",
+      color: active ? "#fff" : "var(--text-body)",
+    }}>{children}</button>
   );
 }
 

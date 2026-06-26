@@ -123,7 +123,7 @@ export function ProductForm({ categories, product }: { categories: Category[]; p
         </div>
       </div>
 
-      <Input label="URL de imagen" value={imageUrl} onChange={(e) => setImageUrl(e.target.value)} placeholder="https://… (opcional)" hint="Pegá la URL de la foto. (La subida de archivos queda para más adelante.)" />
+      <Input label="URL de imagen" value={imageUrl} onChange={(e) => setImageUrl(e.target.value)} placeholder="https://… (opcional)" hint="Pegá la URL de la foto del producto." />
 
       {imageUrl.trim() && (
         // eslint-disable-next-line @next/next/no-img-element
