@@ -1,6 +1,7 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { requireAdmin } from '@/lib/require-admin'
 import type { Product } from '@/lib/types'
 
@@ -55,13 +56,16 @@ export async function getRelatedProducts(opts: {
 }
 
 /**
- * Lectura de productos para el admin: va directo a la tabla (con requireAdmin),
- * sin el gateo de precio del RPC get_products. Devuelve todos los campos.
+ * Lectura de productos para el admin. La tabla `products` no tiene policy de
+ * SELECT (las lecturas públicas van por get_products()), así que validamos al
+ * admin con requireAdmin y leemos con el cliente service-role (bypassa RLS).
+ * Devuelve todos los campos, sin gateo de precio.
  */
 export async function listProductsAdmin(): Promise<{ data?: Product[]; error?: string }> {
   try {
-    const supabase = await requireAdmin()
-    const { data, error } = await supabase
+    await requireAdmin()
+    const admin = createAdminClient()
+    const { data, error } = await admin
       .from('products')
       .select('*')
       .order('name', { ascending: true })
@@ -74,8 +78,9 @@ export async function listProductsAdmin(): Promise<{ data?: Product[]; error?: s
 
 export async function getProductAdmin(id: string): Promise<{ data?: Product; error?: string }> {
   try {
-    const supabase = await requireAdmin()
-    const { data, error } = await supabase
+    await requireAdmin()
+    const admin = createAdminClient()
+    const { data, error } = await admin
       .from('products')
       .select('*')
       .eq('id', id)
