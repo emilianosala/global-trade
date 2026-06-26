@@ -54,6 +54,39 @@ export async function getRelatedProducts(opts: {
   return { data: related }
 }
 
+/**
+ * Lectura de productos para el admin: va directo a la tabla (con requireAdmin),
+ * sin el gateo de precio del RPC get_products. Devuelve todos los campos.
+ */
+export async function listProductsAdmin(): Promise<{ data?: Product[]; error?: string }> {
+  try {
+    const supabase = await requireAdmin()
+    const { data, error } = await supabase
+      .from('products')
+      .select('*')
+      .order('name', { ascending: true })
+    if (error) return { error: error.message }
+    return { data: (data ?? []) as Product[] }
+  } catch (err) {
+    return { error: (err as Error).message }
+  }
+}
+
+export async function getProductAdmin(id: string): Promise<{ data?: Product; error?: string }> {
+  try {
+    const supabase = await requireAdmin()
+    const { data, error } = await supabase
+      .from('products')
+      .select('*')
+      .eq('id', id)
+      .single()
+    if (error) return { error: error.message }
+    return { data: data as Product }
+  } catch (err) {
+    return { error: (err as Error).message }
+  }
+}
+
 export async function createProduct(product: {
   sku: string
   name: string

@@ -11,9 +11,9 @@ const LOGO = "/design/logo-blanco-trim.png";
 const ITEMS: { href: string; label: string; icon: React.ComponentType<{ size?: number }> }[] = [
   { href: "/admin", label: "Dashboard", icon: Icon.LayoutGrid },
   { href: "/admin/usuarios", label: "Usuarios", icon: Icon.Users },
+  { href: "/admin/productos", label: "Productos", icon: Icon.Package },
 ];
 const SOON: { label: string; icon: React.ComponentType<{ size?: number }> }[] = [
-  { label: "Productos", icon: Icon.Package },
   { label: "Categorías", icon: Icon.Tags },
 ];
 
