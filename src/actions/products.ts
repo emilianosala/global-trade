@@ -1,9 +1,17 @@
 'use server'
 
+import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { requireAdmin } from '@/lib/require-admin'
 import type { Product } from '@/lib/types'
+
+/** Purga la caché del listado admin y del catálogo público tras una mutación. */
+function revalidateProducts() {
+  revalidatePath('/admin/productos')
+  revalidatePath('/productos')
+  revalidatePath('/')
+}
 
 /**
  * Reads products through the get_products() SECURITY DEFINER function.
@@ -103,8 +111,9 @@ export async function createProduct(product: {
   isBestseller?: boolean
 }): Promise<{ data?: Product; error?: string }> {
   try {
-    const supabase = await requireAdmin()
-    const { data, error } = await supabase
+    await requireAdmin()
+    const admin = createAdminClient()
+    const { data, error } = await admin
       .from('products')
       .insert({
         sku: product.sku,
@@ -119,6 +128,7 @@ export async function createProduct(product: {
       .select()
       .single()
     if (error) return { error: error.message }
+    revalidateProducts()
     return { data: data as Product }
   } catch (err) {
     return { error: (err as Error).message }
@@ -139,8 +149,9 @@ export async function updateProduct(
   }>
 ): Promise<{ data?: Product; error?: string }> {
   try {
-    const supabase = await requireAdmin()
-    const { data, error } = await supabase
+    await requireAdmin()
+    const admin = createAdminClient()
+    const { data, error } = await admin
       .from('products')
       .update({
         ...(patch.sku          !== undefined && { sku: patch.sku }),
@@ -156,6 +167,7 @@ export async function updateProduct(
       .select()
       .single()
     if (error) return { error: error.message }
+    revalidateProducts()
     return { data: data as Product }
   } catch (err) {
     return { error: (err as Error).message }
@@ -164,9 +176,11 @@ export async function updateProduct(
 
 export async function deleteProduct(id: string): Promise<{ error?: string }> {
   try {
-    const supabase = await requireAdmin()
-    const { error } = await supabase.from('products').delete().eq('id', id)
+    await requireAdmin()
+    const admin = createAdminClient()
+    const { error } = await admin.from('products').delete().eq('id', id)
     if (error) return { error: error.message }
+    revalidateProducts()
     return {}
   } catch (err) {
     return { error: (err as Error).message }

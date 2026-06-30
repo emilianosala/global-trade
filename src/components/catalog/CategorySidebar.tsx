@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { Category } from "@/lib/types";
 import { buildHref, type QueryParams } from "@/lib/query";
+import { UNCATEGORIZED_PATH, UNCATEGORIZED_SLUG } from "@/lib/catalog";
 import { Button } from "@/components/ui/Button";
 import * as Icon from "@/components/ui/Icons";
 
@@ -20,12 +21,14 @@ export function CategorySidebar({
   basePath,
   params,
   approved,
+  hasUncategorized = false,
 }: {
   categories: Category[];
   activeSlug: string | null;
   basePath: string;
   params: QueryParams;
   approved: boolean;
+  hasUncategorized?: boolean;
 }) {
   const router = useRouter();
 
@@ -132,6 +135,9 @@ export function CategorySidebar({
               </div>
             );
           })}
+          {hasUncategorized && (
+            <Link href={UNCATEGORIZED_PATH} style={linkStyle(activeSlug === UNCATEGORIZED_SLUG)}>Sin categoría</Link>
+          )}
         </nav>
 
         {approved && (

@@ -6,13 +6,26 @@ import * as Icon from "@/components/ui/Icons";
 
 export const metadata = { title: "Productos — Panel admin" };
 
-export default async function AdminProductosPage() {
+const OK_MESSAGES: Record<string, string> = {
+  creado: "Producto creado correctamente.",
+  editado: "Cambios guardados correctamente.",
+  eliminado: "Producto eliminado.",
+};
+
+export default async function AdminProductosPage({ searchParams }: { searchParams: Promise<{ ok?: string }> }) {
+  const { ok } = await searchParams;
+  const okMessage = ok ? OK_MESSAGES[ok] : undefined;
   const [productsRes, categoriesRes] = await Promise.all([listProductsAdmin(), getCategories()]);
   const products = productsRes.data ?? [];
   const categories = categoriesRes.data ?? [];
 
   return (
     <div>
+      {okMessage && (
+        <div style={{ color: "#7BD88F", fontSize: 14, background: "rgba(59,165,93,0.12)", border: "1px solid rgba(59,165,93,0.45)", borderRadius: "var(--radius-2)", padding: "12px 14px", marginBottom: 20 }}>
+          {okMessage}
+        </div>
+      )}
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, flexWrap: "wrap", marginBottom: 24 }}>
         <div>
           <h1 style={{ margin: 0, fontFamily: "var(--font-brand)", fontWeight: 800, fontSize: 28, textTransform: "uppercase", color: "#fff" }}>Productos</h1>

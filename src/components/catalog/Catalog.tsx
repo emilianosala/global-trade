@@ -60,6 +60,7 @@ export function Catalog({
   approved,
   basePath,
   activeSlug,
+  hasUncategorized = false,
   title,
   eyebrow,
   params,
@@ -70,6 +71,7 @@ export function Catalog({
   approved: boolean;
   basePath: string;
   activeSlug: string | null;
+  hasUncategorized?: boolean;
   title: string;
   eyebrow: string;
   params: QueryParams;
@@ -133,6 +135,7 @@ export function Catalog({
           basePath={basePath}
           params={params}
           approved={approved}
+          hasUncategorized={hasUncategorized}
         />
 
         <section>

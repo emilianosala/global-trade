@@ -17,6 +17,9 @@
 /.next/
 /out/
 
+# imágenes subidas en runtime desde el admin (no versionar)
+/public/uploads/
+
 # production
 /build
 

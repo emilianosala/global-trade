@@ -5,30 +5,69 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { updateProduct, deleteProduct } from "@/actions/products";
 import { Button } from "@/components/ui/Button";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import * as Icon from "@/components/ui/Icons";
 import { formatARS } from "@/lib/format";
 import type { Category, Product } from "@/lib/types";
 
 const PER_PAGE = 20;
+const NO_CATEGORY = "__none__"; // valor del filtro "Sin categoría"
 
 export function ProductsTable({ products, categories }: { products: Product[]; categories: Category[] }) {
   const router = useRouter();
   const [q, setQ] = React.useState("");
   const [flag, setFlag] = React.useState<"all" | "featured" | "bestseller">("all");
+  const [categoryId, setCategoryId] = React.useState("");
   const [page, setPage] = React.useState(1);
   const [pending, startTransition] = React.useTransition();
   const [busyId, setBusyId] = React.useState<string | null>(null);
   const [error, setError] = React.useState<string | null>(null);
+  const [confirmDel, setConfirmDel] = React.useState<Product | null>(null);
 
   const categoryName = React.useMemo(
     () => new Map(categories.map((c) => [c.id, c.name])),
     [categories],
   );
 
+  // Hijos por categoría: para el desplegable y para filtrar por subárbol.
+  const childrenOf = React.useMemo(() => {
+    const m = new Map<string | null, Category[]>();
+    for (const c of categories) m.set(c.parent_id, [...(m.get(c.parent_id) ?? []), c]);
+    return m;
+  }, [categories]);
+
+  // Opciones del selector, indentadas por nivel.
+  const categoryOptions = React.useMemo(() => {
+    const out: { id: string; label: string }[] = [];
+    const walk = (parentId: string | null, depth: number) => {
+      for (const c of (childrenOf.get(parentId) ?? [])) {
+        out.push({ id: c.id, label: `${"— ".repeat(depth)}${c.name}` });
+        walk(c.id, depth + 1);
+      }
+    };
+    walk(null, 0);
+    return out;
+  }, [childrenOf]);
+
+  // Filtrar por una categoría incluye sus subcategorías (subárbol completo).
+  const selectedSubtree = React.useMemo(() => {
+    if (!categoryId || categoryId === NO_CATEGORY) return null;
+    const ids = new Set<string>([categoryId]);
+    const stack = [categoryId];
+    while (stack.length) {
+      for (const c of (childrenOf.get(stack.pop()!) ?? [])) {
+        if (!ids.has(c.id)) { ids.add(c.id); stack.push(c.id); }
+      }
+    }
+    return ids;
+  }, [categoryId, childrenOf]);
+
   const filtered = React.useMemo(() => {
     let list = products;
     if (flag === "featured") list = list.filter((p) => p.is_featured);
     else if (flag === "bestseller") list = list.filter((p) => p.is_bestseller);
+    if (categoryId === NO_CATEGORY) list = list.filter((p) => !p.category_id);
+    else if (selectedSubtree) list = list.filter((p) => p.category_id && selectedSubtree.has(p.category_id));
     const s = q.trim().toLowerCase();
     if (s) {
       list = list.filter(
@@ -36,14 +75,21 @@ export function ProductsTable({ products, categories }: { products: Product[]; c
       );
     }
     return list;
-  }, [products, q, flag]);
+  }, [products, q, flag, categoryId, selectedSubtree]);
+
+  // Al cambiar cualquier filtro, volver a la primera página. Ajuste durante el
+  // render (no useEffect) según el patrón recomendado por React.
+  const filterKey = `${q}|${flag}|${categoryId}`;
+  const [prevFilterKey, setPrevFilterKey] = React.useState(filterKey);
+  if (filterKey !== prevFilterKey) {
+    setPrevFilterKey(filterKey);
+    setPage(1);
+  }
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PER_PAGE));
   const current = Math.min(page, totalPages);
   const start = (current - 1) * PER_PAGE;
   const rows = filtered.slice(start, start + PER_PAGE);
-
-  React.useEffect(() => { setPage(1); }, [q, flag]);
 
   const counts = React.useMemo(() => ({
     all: products.length,
@@ -62,8 +108,10 @@ export function ProductsTable({ products, categories }: { products: Product[]; c
     });
   }
 
-  function onDelete(p: Product) {
-    if (!window.confirm(`¿Eliminar "${p.name}"? No se puede deshacer.`)) return;
+  function confirmDelete() {
+    if (!confirmDel) return;
+    const p = confirmDel;
+    setConfirmDel(null);
     act(p.id, () => deleteProduct(p.id));
   }
 
@@ -73,6 +121,15 @@ export function ProductsTable({ products, categories }: { products: Product[]; c
         <div style={{ flex: 1, minWidth: 220, display: "flex", alignItems: "center", gap: 10, background: "var(--gt-black)", border: "1px solid var(--border-dark)", borderRadius: "var(--radius-2)", padding: "0 14px", height: 44 }}>
           <Icon.Search size={18} />
           <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Buscar por nombre o SKU…" style={{ flex: 1, background: "transparent", border: "none", outline: "none", color: "#fff", fontFamily: "var(--font-brand)", fontSize: 14 }} />
+        </div>
+        <div style={{ position: "relative", display: "flex", minWidth: 200 }}>
+          <select value={categoryId} onChange={(e) => setCategoryId(e.target.value)} aria-label="Filtrar por categoría"
+            style={{ appearance: "none", WebkitAppearance: "none", MozAppearance: "none", width: "100%", height: 44, background: "var(--gt-black)", color: categoryId ? "#fff" : "var(--text-muted)", border: "1px solid var(--border-dark)", borderRadius: "var(--radius-2)", padding: "0 36px 0 14px", fontFamily: "var(--font-brand)", fontSize: 14, outline: "none", cursor: "pointer" }}>
+            <option value="">Todas las categorías</option>
+            <option value={NO_CATEGORY} style={{ color: "#fff" }}>Sin categoría</option>
+            {categoryOptions.map((o) => <option key={o.id} value={o.id} style={{ color: "#fff" }}>{o.label}</option>)}
+          </select>
+          <span style={{ position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)", pointerEvents: "none", color: "var(--text-muted)", display: "flex" }}><Icon.ChevronDown size={16} /></span>
         </div>
         <span style={{ color: "var(--text-muted)", fontSize: 13 }}>{filtered.length} producto{filtered.length === 1 ? "" : "s"}</span>
       </div>
@@ -112,7 +169,7 @@ export function ProductsTable({ products, categories }: { products: Product[]; c
                 <Link href={`/admin/productos/${p.id}`} aria-label="Editar" style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: 34, height: 34, borderRadius: "var(--radius-2)", border: "1px solid var(--border-dark)", color: "var(--text-body)", textDecoration: "none" }}>
                   <Icon.SlidersHorizontal size={15} />
                 </Link>
-                <button onClick={() => onDelete(p)} disabled={busy} aria-label="Eliminar" style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: 34, height: 34, borderRadius: "var(--radius-2)", border: "1px solid var(--border-dark)", background: "transparent", color: "var(--text-muted)", cursor: "pointer" }}>
+                <button onClick={() => setConfirmDel(p)} disabled={busy} aria-label="Eliminar" style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: 34, height: 34, borderRadius: "var(--radius-2)", border: "1px solid var(--border-dark)", background: "transparent", color: "var(--text-muted)", cursor: "pointer" }}>
                   <Icon.Trash size={15} />
                 </button>
               </div>
@@ -131,6 +188,14 @@ export function ProductsTable({ products, categories }: { products: Product[]; c
           <Button size="sm" variant="ghost" disabled={current >= totalPages} onClick={() => setPage((p) => Math.min(totalPages, p + 1))} iconRight={<Icon.ChevronRight size={16} />}>Siguiente</Button>
         </div>
       )}
+
+      <ConfirmDialog
+        open={!!confirmDel}
+        title="Eliminar producto"
+        message={confirmDel ? <>¿Eliminar <strong style={{ color: "#fff" }}>“{confirmDel.name}”</strong>? Esta acción no se puede deshacer.</> : null}
+        onConfirm={confirmDelete}
+        onCancel={() => setConfirmDel(null)}
+      />
     </div>
   );
 }

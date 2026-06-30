@@ -35,11 +35,17 @@ export default async function CategoriaPage({
   const cat = categories.find((c) => c.slug === slug);
   if (!cat) notFound();
 
-  const productsRes = await getProducts({ categoryId: cat.id });
+  // La lista usa el subárbol resuelto en la DB; el segundo fetch (todos) sólo
+  // alimenta el flag "Sin categoría" del sidebar.
+  const [productsRes, allRes] = await Promise.all([
+    getProducts({ categoryId: cat.id }),
+    getProducts({}),
+  ]);
 
   const approved =
     profileRes.data?.status === "approved" || profileRes.data?.role === "admin";
   const categoryName = new Map(categories.map((c) => [c.id, c.name]));
+  const hasUncategorized = (allRes.data ?? []).some((p) => p.category_id === null);
 
   return (
     <Catalog
@@ -49,6 +55,7 @@ export default async function CategoriaPage({
       approved={approved}
       basePath={`/categoria/${slug}`}
       activeSlug={slug}
+      hasUncategorized={hasUncategorized}
       title={cat.name}
       eyebrow="Categoría"
       params={sp}

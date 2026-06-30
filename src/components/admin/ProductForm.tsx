@@ -3,8 +3,10 @@
 import React from "react";
 import { useRouter } from "next/navigation";
 import { createProduct, updateProduct, deleteProduct } from "@/actions/products";
+import { uploadImage } from "@/actions/uploads";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import * as Icon from "@/components/ui/Icons";
 import type { Category, Product } from "@/lib/types";
 
@@ -34,7 +36,24 @@ export function ProductForm({ categories, product }: { categories: Category[]; p
   const [isFeatured, setIsFeatured] = React.useState(product?.is_featured ?? false);
   const [isBestseller, setIsBestseller] = React.useState(product?.is_bestseller ?? false);
   const [error, setError] = React.useState<string | null>(null);
+  const [uploading, setUploading] = React.useState(false);
+  const [confirmOpen, setConfirmOpen] = React.useState(false);
   const [pending, startTransition] = React.useTransition();
+  const fileRef = React.useRef<HTMLInputElement>(null);
+
+  async function onPickFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setError(null);
+    setUploading(true);
+    const fd = new FormData();
+    fd.append("file", file);
+    const res = await uploadImage(fd);
+    setUploading(false);
+    if (fileRef.current) fileRef.current.value = "";
+    if (res.error) { setError(res.error); return; }
+    if (res.url) setImageUrl(res.url);
+  }
 
   const options = categoryOptions(categories);
 
@@ -76,14 +95,13 @@ export function ProductForm({ categories, product }: { categories: Category[]; p
         setError(res.error);
         return;
       }
-      router.push("/admin/productos");
-      router.refresh();
+      router.push(`/admin/productos?ok=${editing ? "editado" : "creado"}`);
     });
   }
 
-  function onDelete() {
+  function doDelete() {
     if (!product) return;
-    if (!window.confirm(`¿Eliminar "${product.name}"? No se puede deshacer.`)) return;
+    setConfirmOpen(false);
     setError(null);
     startTransition(async () => {
       const res = await deleteProduct(product.id);
@@ -91,8 +109,7 @@ export function ProductForm({ categories, product }: { categories: Category[]; p
         setError(res.error);
         return;
       }
-      router.push("/admin/productos");
-      router.refresh();
+      router.push("/admin/productos?ok=eliminado");
     });
   }
 
@@ -123,12 +140,25 @@ export function ProductForm({ categories, product }: { categories: Category[]; p
         </div>
       </div>
 
-      <Input label="URL de imagen" value={imageUrl} onChange={(e) => setImageUrl(e.target.value)} placeholder="https://… (opcional)" hint="Pegá la URL de la foto del producto." />
+      <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+        <Input label="Imagen del producto" value={imageUrl} onChange={(e) => setImageUrl(e.target.value)} placeholder="https://… (opcional)" hint="Pegá una URL o subí una foto desde tu computadora (JPG, PNG o WebP, hasta 5 MB)." />
+        <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+          <input ref={fileRef} type="file" accept="image/jpeg,image/png,image/webp" onChange={onPickFile} style={{ display: "none" }} />
+          <Button type="button" variant="ghost" size="sm" disabled={uploading} onClick={() => fileRef.current?.click()} iconLeft={<Icon.Package size={15} />}>
+            {uploading ? "Subiendo…" : "Subir desde mi compu"}
+          </Button>
+          {imageUrl.trim() && (
+            <button type="button" onClick={() => setImageUrl("")} disabled={uploading} style={{ background: "transparent", border: "none", color: "var(--text-muted)", fontSize: 13, cursor: "pointer", textDecoration: "underline" }}>
+              Quitar imagen
+            </button>
+          )}
+        </div>
 
-      {imageUrl.trim() && (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img src={imageUrl.trim()} alt="Vista previa" style={{ width: 120, height: 120, objectFit: "cover", borderRadius: "var(--radius-2)", border: "1px solid var(--border-dark)" }} />
-      )}
+        {imageUrl.trim() && (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={imageUrl.trim()} alt="Vista previa" style={{ width: 120, height: 120, objectFit: "cover", borderRadius: "var(--radius-2)", border: "1px solid var(--border-dark)" }} />
+        )}
+      </div>
 
       <div style={{ display: "flex", gap: 20, flexWrap: "wrap", padding: "4px 0" }}>
         <Toggle checked={isFeatured} onChange={setIsFeatured} label="Destacado" />
@@ -143,9 +173,18 @@ export function ProductForm({ categories, product }: { categories: Category[]; p
         <Button type="submit" variant="primary" disabled={pending}>{pending ? "Guardando…" : editing ? "Guardar cambios" : "Crear producto"}</Button>
         <Button type="button" variant="ghost" href="/admin/productos">Cancelar</Button>
         {editing && (
-          <Button type="button" variant="danger" disabled={pending} onClick={onDelete} iconLeft={<Icon.Trash size={15} />} style={{ marginLeft: "auto" }}>Eliminar</Button>
+          <Button type="button" variant="danger" disabled={pending} onClick={() => setConfirmOpen(true)} iconLeft={<Icon.Trash size={15} />} style={{ marginLeft: "auto" }}>Eliminar</Button>
         )}
       </div>
+
+      <ConfirmDialog
+        open={confirmOpen}
+        title="Eliminar producto"
+        message={product ? <>¿Eliminar <strong style={{ color: "#fff" }}>“{product.name}”</strong>? Esta acción no se puede deshacer.</> : null}
+        pending={pending}
+        onConfirm={doDelete}
+        onCancel={() => setConfirmOpen(false)}
+      />
     </form>
   );
 }

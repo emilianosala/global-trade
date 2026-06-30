@@ -4,6 +4,7 @@ import React from "react";
 import { useRouter } from "next/navigation";
 import { approveUser, rejectUser, deleteUser } from "@/actions/users";
 import { Button } from "@/components/ui/Button";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import * as Icon from "@/components/ui/Icons";
 import type { UserStatus } from "@/lib/types";
 
@@ -19,6 +20,7 @@ export function UserActions({
   const router = useRouter();
   const [pending, startTransition] = React.useTransition();
   const [error, setError] = React.useState<string | null>(null);
+  const [confirmOpen, setConfirmOpen] = React.useState(false);
 
   function run(fn: () => Promise<{ error?: string }>) {
     setError(null);
@@ -29,8 +31,8 @@ export function UserActions({
     });
   }
 
-  function onDelete() {
-    if (!window.confirm("¿Eliminar esta cuenta de forma permanente? No se puede deshacer.")) return;
+  function confirmDelete() {
+    setConfirmOpen(false);
     run(() => deleteUser(userId));
   }
 
@@ -44,10 +46,19 @@ export function UserActions({
           <Button size="sm" variant="secondary" disabled={pending} onClick={() => run(() => rejectUser(userId))}>Rechazar</Button>
         )}
         {!isSelf && (
-          <Button size="sm" variant="ghost" disabled={pending} onClick={onDelete} aria-label="Eliminar"><Icon.Trash size={15} /></Button>
+          <Button size="sm" variant="ghost" disabled={pending} onClick={() => setConfirmOpen(true)} aria-label="Eliminar"><Icon.Trash size={15} /></Button>
         )}
       </div>
       {error && <span style={{ color: "#E57373", fontSize: 12 }}>{error}</span>}
+
+      <ConfirmDialog
+        open={confirmOpen}
+        title="Eliminar cuenta"
+        message={<>¿Eliminar esta cuenta de forma permanente? Esta acción no se puede deshacer.</>}
+        pending={pending}
+        onConfirm={confirmDelete}
+        onCancel={() => setConfirmOpen(false)}
+      />
     </div>
   );
 }
