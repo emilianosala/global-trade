@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "eslint",
     "promote-admin": "tsx scripts/promote-admin.ts",
-    "import-woocommerce": "tsx scripts/import-woocommerce.ts"
+    "import-woocommerce": "tsx scripts/import-woocommerce.ts",
+    "migrate-images": "tsx scripts/migrate-images.ts"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.0",
