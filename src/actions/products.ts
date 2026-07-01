@@ -5,13 +5,29 @@ import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { requireAdmin } from '@/lib/require-admin'
 import { cleanupUnusedUploads } from '@/lib/media-cleanup'
+import { toSlug } from '@/lib/product-url'
 import type { Product } from '@/lib/types'
 
 /** Purga la caché del listado admin y del catálogo público tras una mutación. */
 function revalidateProducts() {
   revalidatePath('/admin/productos')
   revalidatePath('/productos')
+  revalidatePath('/productos/[...slug]', 'page')
   revalidatePath('/')
+}
+
+/** Slug amigable único para un producto (contra products.slug). */
+async function uniqueProductSlug(
+  admin: ReturnType<typeof createAdminClient>,
+  name: string,
+): Promise<string> {
+  const base = toSlug(name) || 'producto'
+  let candidate = base
+  for (let n = 2; ; n++) {
+    const { data } = await admin.from('products').select('id').eq('slug', candidate).maybeSingle()
+    if (!data) return candidate
+    candidate = `${base}-${n}`
+  }
 }
 
 /**
@@ -24,6 +40,7 @@ export async function getProducts(opts?: {
   productId?: string
   featured?: boolean
   bestseller?: boolean
+  slug?: string
 }): Promise<{ data?: Product[]; error?: string }> {
   const supabase = await createClient()
   const { data, error } = await supabase.rpc('get_products', {
@@ -31,6 +48,7 @@ export async function getProducts(opts?: {
     p_product_id: opts?.productId ?? null,
     p_featured: opts?.featured ?? null,
     p_bestseller: opts?.bestseller ?? null,
+    p_slug: opts?.slug ?? null,
   })
   if (error) return { error: error.message }
   return { data: data as Product[] }
@@ -115,11 +133,13 @@ export async function createProduct(product: {
   try {
     await requireAdmin()
     const admin = createAdminClient()
+    const slug = await uniqueProductSlug(admin, product.name)
     const { data, error } = await admin
       .from('products')
       .insert({
         sku: product.sku,
         name: product.name,
+        slug,
         description: product.description ?? null,
         price: product.price,
         category_id: product.categoryId ?? null,

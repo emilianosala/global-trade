@@ -9,7 +9,8 @@
     "lint": "eslint",
     "promote-admin": "tsx scripts/promote-admin.ts",
     "import-woocommerce": "tsx scripts/import-woocommerce.ts",
-    "migrate-images": "tsx scripts/migrate-images.ts"
+    "migrate-images": "tsx scripts/migrate-images.ts",
+    "generate-product-slugs": "tsx scripts/generate-product-slugs.ts"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.0",

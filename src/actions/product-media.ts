@@ -84,7 +84,7 @@ export async function setProductMedia(
     await cleanupUnusedUploads(admin, removed)
 
     revalidatePath('/admin/productos')
-    revalidatePath(`/productos/${productId}`)
+    revalidatePath('/productos/[...slug]', 'page')
     revalidatePath('/productos')
     revalidatePath('/')
     return {}

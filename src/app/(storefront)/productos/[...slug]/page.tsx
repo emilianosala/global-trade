@@ -1,5 +1,5 @@
 import type { CSSProperties } from "react";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import { getProducts, getRelatedProducts } from "@/actions/products";
 import { getProductMedia } from "@/actions/product-media";
@@ -10,36 +10,49 @@ import { OutOfStockLabel } from "@/components/product/OutOfStockLabel";
 import { Button } from "@/components/ui/Button";
 import * as Icon from "@/components/ui/Icons";
 import { formatARS } from "@/lib/format";
+import { productPath } from "@/lib/product-url";
+import type { Product } from "@/lib/types";
 
-export async function generateMetadata({
-  params,
-}: {
-  params: Promise<{ id: string }>;
-}) {
-  const { id } = await params;
-  const { data } = await getProducts({ productId: id });
-  const product = data?.[0];
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/** Resuelve el producto de la URL: por slug (último segmento) o, si es una URL
+ *  vieja de un solo segmento UUID, por id. */
+async function resolveProduct(slug: string[]): Promise<Product | undefined> {
+  const last = slug[slug.length - 1];
+  const byUuid = slug.length === 1 && UUID_RE.test(last);
+  const res = byUuid ? await getProducts({ productId: last }) : await getProducts({ slug: last });
+  return res.data?.[0];
+}
+
+export async function generateMetadata({ params }: { params: Promise<{ slug: string[] }> }) {
+  const { slug } = await params;
+  const product = await resolveProduct(slug);
   return { title: product ? `${product.name} — Global Trade` : "Producto — Global Trade" };
 }
 
 export default async function ProductoDetallePage({
   params,
 }: {
-  params: Promise<{ id: string }>;
+  params: Promise<{ slug: string[] }>;
 }) {
-  const { id } = await params;
+  const { slug } = await params;
 
-  const [productRes, categoriesRes, relatedRes, mediaRes] = await Promise.all([
-    getProducts({ productId: id }),
-    getCategories(),
-    getRelatedProducts({ productId: id, limit: 4 }),
-    getProductMedia(id),
-  ]);
-
-  const product = productRes.data?.[0];
+  const [product, categoriesRes] = await Promise.all([resolveProduct(slug), getCategories()]);
   if (!product) notFound();
 
   const categories = categoriesRes.data ?? [];
+
+  // Redirigir a la URL canónica (URLs viejas por id, o rutas de categoría que ya
+  // no coinciden con la categoría actual del producto).
+  const canonical = productPath(product, categories);
+  const requested = `/productos/${slug.join("/")}`;
+  if (requested !== canonical) redirect(canonical);
+
+  const [relatedRes, mediaRes] = await Promise.all([
+    getRelatedProducts({ productId: product.id, limit: 4 }),
+    getProductMedia(product.id),
+  ]);
+
   const categoryName = new Map(categories.map((c) => [c.id, c.name]));
   const cat = product.category_id
     ? categories.find((c) => c.id === product.category_id) ?? null
@@ -48,7 +61,6 @@ export default async function ProductoDetallePage({
     ? categories.find((c) => c.id === cat.parent_id) ?? null
     : null;
 
-  // El precio viene null cuando el visitante no está aprobado (gateado en la DB).
   const approved = product.price !== null;
   const related = relatedRes.data ?? [];
 
@@ -144,7 +156,7 @@ export default async function ProductoDetallePage({
             {related.map((p) => (
               <ProductCard
                 key={p.id}
-                href={`/productos/${p.id}`}
+                href={productPath(p, categories)}
                 image={p.image_url}
                 imageSlotId={p.image_url ? undefined : p.id}
                 category={p.category_id ? categoryName.get(p.category_id) ?? null : null}

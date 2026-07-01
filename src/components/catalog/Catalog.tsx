@@ -5,6 +5,7 @@ import { ProductCard } from "@/components/product/ProductCard";
 import { CategorySidebar } from "./CategorySidebar";
 import { SortSelect } from "./SortSelect";
 import { buildHref, type QueryParams } from "@/lib/query";
+import { productPath } from "@/lib/product-url";
 import * as Icon from "@/components/ui/Icons";
 
 const PER_PAGE = 24;
@@ -171,7 +172,7 @@ export function Catalog({
               {pageItems.map((p) => (
                 <ProductCard
                   key={p.id}
-                  href={`/productos/${p.id}`}
+                  href={productPath(p, categories)}
                   image={p.image_url}
                   imageSlotId={p.image_url ? undefined : p.id}
                   category={p.category_id ? categoryName.get(p.category_id) ?? null : null}

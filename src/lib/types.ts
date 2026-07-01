@@ -41,6 +41,8 @@ export interface Product {
   id: string
   sku: string
   name: string
+  /** dirección amigable para la URL (/productos/[cat]/…/[slug]); null hasta poblar */
+  slug: string | null
   description: string | null
   /** null when the caller is not an approved user or admin */
   price: number | null

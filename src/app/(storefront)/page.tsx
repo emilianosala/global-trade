@@ -10,16 +10,18 @@ import {
   type SectionProduct,
 } from "@/components/home/HomeSections";
 import { buildNav } from "@/lib/nav";
+import { productPath } from "@/lib/product-url";
 import type { Category, Product } from "@/lib/types";
 
 function toSectionProducts(
   products: Product[],
-  categoryName: Map<string, string>,
+  categories: Category[],
   badge?: string,
 ): SectionProduct[] {
+  const categoryName = new Map(categories.map((c) => [c.id, c.name]));
   return products.map((p) => ({
     id: p.id,
-    href: `/productos/${p.id}`,
+    href: productPath(p, categories),
     image: p.image_url,
     name: p.name,
     category: p.category_id ? categoryName.get(p.category_id) ?? null : null,
@@ -53,8 +55,6 @@ export default async function Home() {
     image: c.image,
   }));
 
-  const categoryName = new Map(categories.map((c) => [c.id, c.name]));
-
   const all = allRes.data ?? [];
   const novedades = [...all]
     .sort((a, b) => +new Date(b.created_at) - +new Date(a.created_at))
@@ -68,11 +68,11 @@ export default async function Home() {
       <CategoryTiles tiles={tiles} />
       <ProductSection id="novedades" eyebrow="Recién llegados" title="Novedades"
         href="/productos"
-        products={toSectionProducts(novedades, categoryName, "Nuevo")} />
+        products={toSectionProducts(novedades, categories, "Nuevo")} />
       <ProductSection id="destacados" eyebrow="Selección Global Trade" title="Destacados"
-        products={toSectionProducts(destacados, categoryName)} />
+        products={toSectionProducts(destacados, categories)} />
       <ProductSection id="masvendidos" eyebrow="Lo que más rota" title="Más vendidos"
-        products={toSectionProducts(masVendidos, categoryName)} />
+        products={toSectionProducts(masVendidos, categories)} />
       <Benefits />
     </main>
   );
