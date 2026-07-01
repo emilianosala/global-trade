@@ -14,6 +14,12 @@ export interface MediaItem {
   isPrimary: boolean;
 }
 
+/** ID temporal para la key de React (crypto.randomUUID sólo existe en contextos
+ *  seguros; el VPS por http://IP:puerto no lo es). No necesita ser criptográfico. */
+function genKey(): string {
+  return `m-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
+}
+
 /**
  * Editor de la galería de un producto: subir varias imágenes, agregar videos por
  * link (YouTube/Vimeo), reordenar, y elegir la imagen principal (portada del
@@ -47,14 +53,19 @@ export function MediaManager({
     if (!file) return;
     onError(null);
     setUploading(true);
-    const fd = new FormData();
-    fd.append("file", file);
-    const res = await uploadImage(fd);
-    setUploading(false);
-    if (fileRef.current) fileRef.current.value = "";
-    if (res.error) { onError(res.error); return; }
-    if (res.url) {
-      onChange(normalizePrimary([...value, { key: crypto.randomUUID(), type: "image", url: res.url, isPrimary: false }]));
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      const res = await uploadImage(fd);
+      if (res.error) { onError(res.error); return; }
+      if (res.url) {
+        onChange(normalizePrimary([...value, { key: genKey(), type: "image", url: res.url, isPrimary: false }]));
+      }
+    } catch (err) {
+      onError((err as Error).message || "No se pudo subir la imagen.");
+    } finally {
+      setUploading(false);
+      if (fileRef.current) fileRef.current.value = "";
     }
   }
 
@@ -63,7 +74,7 @@ export function MediaManager({
     if (!url) return;
     if (!isValidVideoUrl(url)) { onError("Pegá un link válido de YouTube o Vimeo."); return; }
     onError(null);
-    onChange([...value, { key: crypto.randomUUID(), type: "video", url, isPrimary: false }]);
+    onChange([...value, { key: genKey(), type: "video", url, isPrimary: false }]);
     setVideoUrl("");
   }
 
