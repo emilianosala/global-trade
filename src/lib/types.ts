@@ -25,6 +25,18 @@ export interface Category {
   created_at: string
 }
 
+export type MediaType = 'image' | 'video'
+
+export interface ProductMedia {
+  id: string
+  product_id: string
+  type: MediaType
+  url: string
+  position: number
+  is_primary: boolean
+  created_at: string
+}
+
 export interface Product {
   id: string
   sku: string
@@ -36,6 +48,8 @@ export interface Product {
   /** admin-curated flags driving the home "destacados" / "más vendidos" sections */
   is_featured: boolean
   is_bestseller: boolean
+  /** admin-toggled: shows a "SIN STOCK" label in the catalog and detail page */
+  out_of_stock: boolean
   category_id: string | null
   created_at: string
   updated_at: string

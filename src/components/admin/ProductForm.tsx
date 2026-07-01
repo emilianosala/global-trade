@@ -3,12 +3,13 @@
 import React from "react";
 import { useRouter } from "next/navigation";
 import { createProduct, updateProduct, deleteProduct } from "@/actions/products";
-import { uploadImage } from "@/actions/uploads";
+import { setProductMedia, type MediaInput } from "@/actions/product-media";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import { MediaManager, type MediaItem } from "@/components/admin/MediaManager";
 import * as Icon from "@/components/ui/Icons";
-import type { Category, Product } from "@/lib/types";
+import type { Category, Product, ProductMedia } from "@/lib/types";
 
 /** Opciones del select de categoría: raíces + hijas indentadas. */
 function categoryOptions(categories: Category[]) {
@@ -23,7 +24,27 @@ function categoryOptions(categories: Category[]) {
   return out;
 }
 
-export function ProductForm({ categories, product }: { categories: Category[]; product?: Product }) {
+/** Estado inicial de la galería: filas existentes o, para productos previos a
+ *  product_media, la image_url actual como portada (para no perderla al guardar). */
+function initialMediaItems(product?: Product, initialMedia?: ProductMedia[]): MediaItem[] {
+  if (initialMedia && initialMedia.length > 0) {
+    return initialMedia.map((m) => ({ key: m.id, type: m.type, url: m.url, isPrimary: m.is_primary }));
+  }
+  if (product?.image_url) {
+    return [{ key: "legacy", type: "image", url: product.image_url, isPrimary: true }];
+  }
+  return [];
+}
+
+export function ProductForm({
+  categories,
+  product,
+  initialMedia,
+}: {
+  categories: Category[];
+  product?: Product;
+  initialMedia?: ProductMedia[];
+}) {
   const editing = !!product;
   const router = useRouter();
 
@@ -32,28 +53,13 @@ export function ProductForm({ categories, product }: { categories: Category[]; p
   const [description, setDescription] = React.useState(product?.description ?? "");
   const [price, setPrice] = React.useState(product?.price != null ? String(product.price) : "");
   const [categoryId, setCategoryId] = React.useState(product?.category_id ?? "");
-  const [imageUrl, setImageUrl] = React.useState(product?.image_url ?? "");
+  const [media, setMedia] = React.useState<MediaItem[]>(() => initialMediaItems(product, initialMedia));
   const [isFeatured, setIsFeatured] = React.useState(product?.is_featured ?? false);
   const [isBestseller, setIsBestseller] = React.useState(product?.is_bestseller ?? false);
+  const [isOutOfStock, setIsOutOfStock] = React.useState(product?.out_of_stock ?? false);
   const [error, setError] = React.useState<string | null>(null);
-  const [uploading, setUploading] = React.useState(false);
   const [confirmOpen, setConfirmOpen] = React.useState(false);
   const [pending, startTransition] = React.useTransition();
-  const fileRef = React.useRef<HTMLInputElement>(null);
-
-  async function onPickFile(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setError(null);
-    setUploading(true);
-    const fd = new FormData();
-    fd.append("file", file);
-    const res = await uploadImage(fd);
-    setUploading(false);
-    if (fileRef.current) fileRef.current.value = "";
-    if (res.error) { setError(res.error); return; }
-    if (res.url) setImageUrl(res.url);
-  }
 
   const options = categoryOptions(categories);
 
@@ -69,6 +75,9 @@ export function ProductForm({ categories, product }: { categories: Category[]; p
       setError("El precio debe ser un número válido (0 o más).");
       return;
     }
+
+    const mediaItems: MediaInput[] = media.map((m) => ({ type: m.type, url: m.url, isPrimary: m.isPrimary }));
+
     startTransition(async () => {
       const res = editing
         ? await updateProduct(product!.id, {
@@ -77,9 +86,9 @@ export function ProductForm({ categories, product }: { categories: Category[]; p
             description: description.trim(),
             price: priceNum,
             categoryId: categoryId || undefined,
-            imageUrl: imageUrl.trim(),
             isFeatured,
             isBestseller,
+            isOutOfStock,
           })
         : await createProduct({
             sku: sku.trim(),
@@ -87,13 +96,22 @@ export function ProductForm({ categories, product }: { categories: Category[]; p
             description: description.trim() || undefined,
             price: priceNum,
             categoryId: categoryId || undefined,
-            imageUrl: imageUrl.trim() || undefined,
             isFeatured,
             isBestseller,
+            isOutOfStock,
           });
       if (res.error) {
         setError(res.error);
         return;
+      }
+      // La galería (y con ella la portada = products.image_url) se guarda aparte.
+      const productId = editing ? product!.id : res.data?.id;
+      if (productId) {
+        const mres = await setProductMedia(productId, mediaItems);
+        if (mres.error) {
+          setError(mres.error);
+          return;
+        }
       }
       router.push(`/admin/productos?ok=${editing ? "editado" : "creado"}`);
     });
@@ -140,29 +158,12 @@ export function ProductForm({ categories, product }: { categories: Category[]; p
         </div>
       </div>
 
-      <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-        <Input label="Imagen del producto" value={imageUrl} onChange={(e) => setImageUrl(e.target.value)} placeholder="https://… (opcional)" hint="Pegá una URL o subí una foto desde tu computadora (JPG, PNG o WebP, hasta 5 MB)." />
-        <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
-          <input ref={fileRef} type="file" accept="image/jpeg,image/png,image/webp" onChange={onPickFile} style={{ display: "none" }} />
-          <Button type="button" variant="ghost" size="sm" disabled={uploading} onClick={() => fileRef.current?.click()} iconLeft={<Icon.Package size={15} />}>
-            {uploading ? "Subiendo…" : "Subir desde mi compu"}
-          </Button>
-          {imageUrl.trim() && (
-            <button type="button" onClick={() => setImageUrl("")} disabled={uploading} style={{ background: "transparent", border: "none", color: "var(--text-muted)", fontSize: 13, cursor: "pointer", textDecoration: "underline" }}>
-              Quitar imagen
-            </button>
-          )}
-        </div>
-
-        {imageUrl.trim() && (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={imageUrl.trim()} alt="Vista previa" style={{ width: 120, height: 120, objectFit: "cover", borderRadius: "var(--radius-2)", border: "1px solid var(--border-dark)" }} />
-        )}
-      </div>
+      <MediaManager value={media} onChange={setMedia} onError={setError} disabled={pending} />
 
       <div style={{ display: "flex", gap: 20, flexWrap: "wrap", padding: "4px 0" }}>
         <Toggle checked={isFeatured} onChange={setIsFeatured} label="Destacado" />
         <Toggle checked={isBestseller} onChange={setIsBestseller} label="Más vendido" />
+        <Toggle checked={isOutOfStock} onChange={setIsOutOfStock} label="Sin stock" />
       </div>
 
       {error && (

@@ -63,6 +63,7 @@ export interface SectionProduct {
   sku?: string | null;
   price: number | null;
   badge?: string | null;
+  outOfStock?: boolean;
 }
 
 export function ProductSection({
@@ -104,6 +105,7 @@ export function ProductSection({
               sku={p.sku}
               price={p.price}
               badge={p.badge}
+              outOfStock={p.outOfStock}
             />
           ))}
         </div>

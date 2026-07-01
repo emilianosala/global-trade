@@ -1,5 +1,6 @@
 import { readFile } from "node:fs/promises";
 import { join, normalize, extname } from "node:path";
+import { UPLOADS_DIR } from "@/lib/upload-storage";
 
 /**
  * Sirve las imágenes subidas/migradas desde el disco en runtime.
@@ -9,8 +10,6 @@ import { join, normalize, extname } from "node:path";
  * runtime) se entregan por acá, leyendo de `UPLOADS_DIR`. Funciona igual servido
  * directo por IP:puerto o detrás del reverse proxy.
  */
-
-const UPLOADS_DIR = process.env.UPLOADS_DIR || join(process.cwd(), "public", "uploads");
 
 const CONTENT_TYPES: Record<string, string> = {
   ".jpg": "image/jpeg",

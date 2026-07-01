@@ -1,6 +1,7 @@
 import { listProductsAdmin } from "@/actions/products";
 import { getCategories } from "@/actions/categories";
 import { ProductsTable } from "@/components/admin/ProductsTable";
+import { FlashBanner } from "@/components/admin/FlashBanner";
 import { Button } from "@/components/ui/Button";
 import * as Icon from "@/components/ui/Icons";
 
@@ -21,11 +22,7 @@ export default async function AdminProductosPage({ searchParams }: { searchParam
 
   return (
     <div>
-      {okMessage && (
-        <div style={{ color: "#7BD88F", fontSize: 14, background: "rgba(59,165,93,0.12)", border: "1px solid rgba(59,165,93,0.45)", borderRadius: "var(--radius-2)", padding: "12px 14px", marginBottom: 20 }}>
-          {okMessage}
-        </div>
-      )}
+      <FlashBanner message={okMessage ?? null} />
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, flexWrap: "wrap", marginBottom: 24 }}>
         <div>
           <h1 style={{ margin: 0, fontFamily: "var(--font-brand)", fontWeight: 800, fontSize: 28, textTransform: "uppercase", color: "#fff" }}>Productos</h1>

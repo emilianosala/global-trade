@@ -26,6 +26,7 @@ function toSectionProducts(
     sku: p.sku,
     price: p.price,
     badge: badge ?? null,
+    outOfStock: p.out_of_stock,
   }));
 }
 

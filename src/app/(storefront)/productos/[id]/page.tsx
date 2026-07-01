@@ -2,8 +2,11 @@ import type { CSSProperties } from "react";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { getProducts, getRelatedProducts } from "@/actions/products";
+import { getProductMedia } from "@/actions/product-media";
 import { getCategories } from "@/actions/categories";
 import { ProductCard } from "@/components/product/ProductCard";
+import { ProductGallery } from "@/components/product/ProductGallery";
+import { OutOfStockLabel } from "@/components/product/OutOfStockLabel";
 import { Button } from "@/components/ui/Button";
 import * as Icon from "@/components/ui/Icons";
 import { formatARS } from "@/lib/format";
@@ -26,10 +29,11 @@ export default async function ProductoDetallePage({
 }) {
   const { id } = await params;
 
-  const [productRes, categoriesRes, relatedRes] = await Promise.all([
+  const [productRes, categoriesRes, relatedRes, mediaRes] = await Promise.all([
     getProducts({ productId: id }),
     getCategories(),
     getRelatedProducts({ productId: id, limit: 4 }),
+    getProductMedia(id),
   ]);
 
   const product = productRes.data?.[0];
@@ -49,7 +53,7 @@ export default async function ProductoDetallePage({
   const related = relatedRes.data ?? [];
 
   return (
-    <main className="gt-container" style={{ padding: "28px 24px 8px" }}>
+    <main className="gt-container" style={{ padding: "28px 24px 56px" }}>
       {/* Migas */}
       <nav style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 6, color: "var(--text-muted)", fontSize: 13, marginBottom: 22 }}>
         <Link href="/" style={crumb}>Inicio</Link>
@@ -72,23 +76,13 @@ export default async function ProductoDetallePage({
       </nav>
 
       <div className="gt-detail">
-        {/* Imagen */}
-        <div style={{ position: "relative", aspectRatio: "1 / 1", background: "var(--gt-black)", border: "1px solid var(--border-dark)", borderRadius: "var(--radius-2)", overflow: "hidden" }}>
-          {product.image_url ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={product.image_url} alt={product.name} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
-          ) : (
-            <div style={{ width: "100%", height: "100%", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 10, color: "var(--text-muted)", fontSize: 13, letterSpacing: ".06em", textTransform: "uppercase", background: "repeating-linear-gradient(45deg, #1d1d1d, #1d1d1d 12px, #202020 12px, #202020 24px)" }}>
-              <Icon.PackageSearch size={40} />
-              Foto pendiente
-            </div>
-          )}
-          {(product.is_featured || product.is_bestseller) && (
-            <div style={{ position: "absolute", top: 14, left: 14, display: "inline-flex", alignItems: "center", gap: 6, background: "var(--gt-orange)", color: "#fff", borderRadius: "var(--radius-1)", padding: "5px 10px", fontFamily: "var(--font-brand)", fontWeight: 700, fontSize: 11, letterSpacing: ".12em", textTransform: "uppercase" }}>
-              {product.is_featured ? "Destacado" : "Más vendido"}
-            </div>
-          )}
-        </div>
+        {/* Galería: portada + carrusel de imágenes/videos */}
+        <ProductGallery
+          media={mediaRes.data ?? []}
+          productName={product.name}
+          fallbackImage={product.image_url}
+          badge={product.is_featured ? "Destacado" : product.is_bestseller ? "Más vendido" : null}
+        />
 
         {/* Info */}
         <div style={{ display: "flex", flexDirection: "column" }}>
@@ -99,6 +93,7 @@ export default async function ProductoDetallePage({
           {product.sku && (
             <div style={{ marginTop: 10, color: "var(--text-muted)", fontSize: 13, fontFamily: "ui-monospace, monospace" }}>SKU: {product.sku}</div>
           )}
+          {product.out_of_stock && <OutOfStockLabel style={{ marginTop: 12 }} />}
 
           {/* Bloque de precio / acceso */}
           <div style={{ marginTop: 22, padding: 20, background: "var(--surface-card)", border: "1px solid var(--border-dark)", borderRadius: "var(--radius-2)" }}>
@@ -157,6 +152,7 @@ export default async function ProductoDetallePage({
                 sku={p.sku}
                 price={p.price}
                 badge={p.is_featured ? "Destacado" : p.is_bestseller ? "Más vendido" : null}
+                outOfStock={p.out_of_stock}
               />
             ))}
           </div>

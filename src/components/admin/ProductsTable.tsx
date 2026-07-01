@@ -166,6 +166,7 @@ export function ProductsTable({ products, categories }: { products: Product[]; c
               <div style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
                 <FlagChip on={p.is_featured} label="Destacado" disabled={busy} onClick={() => act(p.id, () => updateProduct(p.id, { isFeatured: !p.is_featured }))} />
                 <FlagChip on={p.is_bestseller} label="Más vendido" disabled={busy} onClick={() => act(p.id, () => updateProduct(p.id, { isBestseller: !p.is_bestseller }))} />
+                <FlagChip on={p.out_of_stock} label="Sin stock" disabled={busy} danger onClick={() => act(p.id, () => updateProduct(p.id, { isOutOfStock: !p.out_of_stock }))} />
                 <Link href={`/admin/productos/${p.id}`} aria-label="Editar" style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: 34, height: 34, borderRadius: "var(--radius-2)", border: "1px solid var(--border-dark)", color: "var(--text-body)", textDecoration: "none" }}>
                   <Icon.SlidersHorizontal size={15} />
                 </Link>
@@ -212,15 +213,16 @@ function FilterChip({ active, onClick, children }: { active: boolean; onClick: (
   );
 }
 
-function FlagChip({ on, label, onClick, disabled }: { on: boolean; label: string; onClick: () => void; disabled: boolean }) {
+function FlagChip({ on, label, onClick, disabled, danger = false }: { on: boolean; label: string; onClick: () => void; disabled: boolean; danger?: boolean }) {
+  const activeColor = danger ? "var(--gt-danger)" : "var(--gt-orange)";
   return (
-    <button onClick={onClick} disabled={disabled} title={`${on ? "Quitar de" : "Marcar como"} ${label}`}
+    <button onClick={onClick} disabled={disabled} title={`${on ? "Quitar" : "Marcar"} "${label}"`}
       style={{
         display: "inline-flex", alignItems: "center", gap: 5, height: 34, padding: "0 10px",
         borderRadius: "var(--radius-2)", cursor: "pointer", fontFamily: "var(--font-brand)",
         fontSize: 11.5, fontWeight: 700, letterSpacing: ".04em", textTransform: "uppercase",
-        border: `1px solid ${on ? "var(--gt-orange)" : "var(--border-dark)"}`,
-        background: on ? "var(--gt-orange)" : "transparent",
+        border: `1px solid ${on ? activeColor : "var(--border-dark)"}`,
+        background: on ? activeColor : "transparent",
         color: on ? "#fff" : "var(--text-muted)",
       }}>
       {on && <Icon.Check size={13} />} {label}

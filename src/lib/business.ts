@@ -8,7 +8,7 @@ import type { BusinessType } from "@/lib/types";
 export const BUSINESS_TYPES: { value: BusinessType; label: string }[] = [
   { value: "pesca_camping_aventura", label: "Negocio de pesca/camping/aventura" },
   { value: "otro_negocio", label: "Otro negocio" },
-  { value: "consumidor_final", label: "Soy un consumidor final" },
+  { value: "consumidor_final", label: "Quiero el producto para uso personal" },
 ];
 
 const LABELS = Object.fromEntries(

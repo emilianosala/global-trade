@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { requireAdmin } from '@/lib/require-admin'
+import { cleanupUnusedUploads } from '@/lib/media-cleanup'
 import type { Product } from '@/lib/types'
 
 /** Purga la caché del listado admin y del catálogo público tras una mutación. */
@@ -109,6 +110,7 @@ export async function createProduct(product: {
   imageUrl?: string
   isFeatured?: boolean
   isBestseller?: boolean
+  isOutOfStock?: boolean
 }): Promise<{ data?: Product; error?: string }> {
   try {
     await requireAdmin()
@@ -124,6 +126,7 @@ export async function createProduct(product: {
         image_url: product.imageUrl ?? null,
         is_featured: product.isFeatured ?? false,
         is_bestseller: product.isBestseller ?? false,
+        out_of_stock: product.isOutOfStock ?? false,
       })
       .select()
       .single()
@@ -146,6 +149,7 @@ export async function updateProduct(
     imageUrl: string
     isFeatured: boolean
     isBestseller: boolean
+    isOutOfStock: boolean
   }>
 ): Promise<{ data?: Product; error?: string }> {
   try {
@@ -162,6 +166,7 @@ export async function updateProduct(
         ...(patch.imageUrl     !== undefined && { image_url: patch.imageUrl }),
         ...(patch.isFeatured   !== undefined && { is_featured: patch.isFeatured }),
         ...(patch.isBestseller !== undefined && { is_bestseller: patch.isBestseller }),
+        ...(patch.isOutOfStock !== undefined && { out_of_stock: patch.isOutOfStock }),
       })
       .eq('id', id)
       .select()
@@ -178,8 +183,24 @@ export async function deleteProduct(id: string): Promise<{ error?: string }> {
   try {
     await requireAdmin()
     const admin = createAdminClient()
+
+    // Imágenes locales del producto (galería + portada), para limpiarlas del
+    // disco después de borrar si no quedan referenciadas por otro producto.
+    const [mediaRes, prodRes] = await Promise.all([
+      admin.from('product_media').select('url, type').eq('product_id', id),
+      admin.from('products').select('image_url').eq('id', id).maybeSingle(),
+    ])
+    const urls: string[] = []
+    for (const m of (mediaRes.data ?? []) as { url: string; type: string }[]) {
+      if (m.type === 'image') urls.push(m.url)
+    }
+    const imageUrl = (prodRes.data as { image_url: string | null } | null)?.image_url
+    if (imageUrl) urls.push(imageUrl)
+
     const { error } = await admin.from('products').delete().eq('id', id)
     if (error) return { error: error.message }
+
+    await cleanupUnusedUploads(admin, urls)
     revalidateProducts()
     return {}
   } catch (err) {

@@ -4,6 +4,7 @@ import React from "react";
 import { useRouter } from "next/navigation";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
+import { OutOfStockLabel } from "@/components/product/OutOfStockLabel";
 import { formatARS } from "@/lib/format";
 
 /* Lucide-style lock glyph (kept inline so the card is self-contained) */
@@ -36,6 +37,7 @@ export interface ProductCardProps {
   /** null => estado bloqueado */
   price: number | null;
   badge?: string | null;
+  outOfStock?: boolean;
   imageSlotId?: string;
   imagePlaceholder?: string;
   style?: React.CSSProperties;
@@ -50,6 +52,7 @@ export function ProductCard({
   sku,
   price,
   badge,
+  outOfStock = false,
   imageSlotId,
   imagePlaceholder = "Foto pendiente",
   style,
@@ -130,6 +133,8 @@ export function ProductCard({
         <div style={{ display: "flex", gap: "12px", color: "var(--text-muted)", fontSize: "12px", marginTop: "2px" }}>
           {sku && <span style={{ fontFamily: "ui-monospace, monospace" }}>{sku}</span>}
         </div>
+
+        {outOfStock && <OutOfStockLabel />}
 
         {/* Región de precio (los dos estados) */}
         <div style={{ marginTop: "auto", paddingTop: "14px" }}>

@@ -179,6 +179,7 @@ export function Catalog({
                   sku={p.sku}
                   price={p.price}
                   badge={p.is_featured ? "Destacado" : p.is_bestseller ? "Más vendido" : null}
+                  outOfStock={p.out_of_stock}
                 />
               ))}
             </div>
