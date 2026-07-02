@@ -29,6 +29,7 @@ export async function notifyAdminNewRequest({
   await resend.emails.send({
     from: FROM,
     to: ADMIN_EMAIL,
+    replyTo: userEmail,
     subject: 'Nueva solicitud de acceso — Global Trade',
     html: `
       <p>El usuario <strong>${escapeHtml(userName)}</strong> (${escapeHtml(userEmail)}) solicitó acceso al catálogo.</p>
@@ -48,6 +49,7 @@ export async function notifyUserApproved({
   await resend.emails.send({
     from: FROM,
     to: email,
+    replyTo: ADMIN_EMAIL,
     subject: 'Tu acceso fue aprobado — Global Trade',
     html: `
       <p>Hola ${name},</p>
@@ -66,6 +68,7 @@ export async function notifyUserRejected({
   await resend.emails.send({
     from: FROM,
     to: email,
+    replyTo: ADMIN_EMAIL,
     subject: 'Tu solicitud de acceso — Global Trade',
     html: `
       <p>Hola ${name},</p>
