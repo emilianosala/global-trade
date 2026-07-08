@@ -6,6 +6,7 @@ import { CategorySidebar } from "./CategorySidebar";
 import { SortSelect } from "./SortSelect";
 import { buildHref, type QueryParams } from "@/lib/query";
 import { productPath } from "@/lib/product-url";
+import { foldText } from "@/lib/text";
 import * as Icon from "@/components/ui/Icons";
 
 const PER_PAGE = 24;
@@ -78,14 +79,14 @@ export function Catalog({
   params: QueryParams;
 }) {
   const q = (params.q ?? "").trim();
-  const qLower = q.toLowerCase();
+  const qFolded = foldText(q);
 
   let list = products;
-  if (qLower) {
+  if (qFolded) {
     list = list.filter(
       (p) =>
-        p.name.toLowerCase().includes(qLower) ||
-        (p.sku ?? "").toLowerCase().includes(qLower),
+        foldText(p.name).includes(qFolded) ||
+        foldText(p.sku ?? "").includes(qFolded),
     );
   }
 

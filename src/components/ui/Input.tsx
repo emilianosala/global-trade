@@ -22,6 +22,7 @@ export function Input({
   type = "text",
   id,
   style,
+  required,
   ...rest
 }: InputProps) {
   const [focus, setFocus] = React.useState(false);
@@ -57,6 +58,11 @@ export function Input({
           }}
         >
           {label}
+          {required && (
+            <span aria-hidden="true" style={{ color: "var(--accent)", marginLeft: "3px" }}>
+              *
+            </span>
+          )}
         </label>
       )}
       <div style={wrap}>
@@ -64,6 +70,7 @@ export function Input({
         <input
           id={inputId}
           type={type}
+          required={required}
           onFocus={() => setFocus(true)}
           onBlur={() => setFocus(false)}
           style={{

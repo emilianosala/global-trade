@@ -3,6 +3,8 @@ import { Resend } from 'resend'
 const resend = new Resend(process.env.RESEND_API_KEY!)
 const FROM = process.env.EMAIL_FROM!
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL!
+// Base pública del sitio, usada para armar links en los emails. Sin barra final.
+const SITE_URL = (process.env.SITE_URL || 'https://mlglobaltrade.com.ar').replace(/\/$/, '')
 
 export async function notifyAdminNewRequest({
   userName,
@@ -34,7 +36,7 @@ export async function notifyAdminNewRequest({
     html: `
       <p>El usuario <strong>${escapeHtml(userName)}</strong> (${escapeHtml(userEmail)}) solicitó acceso al catálogo.</p>
       ${extra}
-      <p>Ingresá al panel de administración para aprobar o rechazar la solicitud.</p>
+      <p><a href="${SITE_URL}/admin/usuarios" style="color:#F15400;font-weight:600;">Ingresá al panel de administración</a> para aprobar o rechazar la solicitud.</p>
     `,
   })
 }
