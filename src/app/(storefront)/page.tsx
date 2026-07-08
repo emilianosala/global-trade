@@ -33,11 +33,11 @@ function toSectionProducts(
 }
 
 export default async function Home() {
-  const [profileRes, categoriesRes, allRes, featuredRes, bestsellerRes] =
+  const [profileRes, categoriesRes, noveltyRes, featuredRes, bestsellerRes] =
     await Promise.all([
       getProfile(),
       getCategories(),
-      getProducts({}),
+      getProducts({ novelty: true }),
       getProducts({ featured: true }),
       getProducts({ bestseller: true }),
     ]);
@@ -55,12 +55,19 @@ export default async function Home() {
     image: c.image,
   }));
 
-  const all = allRes.data ?? [];
-  const novedades = [...all]
-    .sort((a, b) => +new Date(b.created_at) - +new Date(a.created_at))
-    .slice(0, 4);
-  const destacados = (featuredRes.data ?? []).slice(0, 4);
-  const masVendidos = (bestsellerRes.data ?? []).slice(0, 4);
+  // Orden curado por el admin: menor rank primero; los sin rank (null) van al
+  // final, desempatados por nombre.
+  const byRank = (key: "featured_rank" | "bestseller_rank" | "novelty_rank") => (a: Product, b: Product) => {
+    const ra = a[key];
+    const rb = b[key];
+    if (ra == null && rb == null) return a.name.localeCompare(b.name, "es");
+    if (ra == null) return 1;
+    if (rb == null) return -1;
+    return ra - rb;
+  };
+  const novedades = [...(noveltyRes.data ?? [])].sort(byRank("novelty_rank"));
+  const destacados = [...(featuredRes.data ?? [])].sort(byRank("featured_rank"));
+  const masVendidos = [...(bestsellerRes.data ?? [])].sort(byRank("bestseller_rank"));
 
   return (
     <main>
@@ -68,10 +75,13 @@ export default async function Home() {
       <CategoryTiles tiles={tiles} />
       <ProductSection id="novedades" eyebrow="Recién llegados" title="Novedades"
         href="/productos"
+        variant="carousel"
         products={toSectionProducts(novedades, categories, "Nuevo")} />
       <ProductSection id="destacados" eyebrow="Selección Global Trade" title="Destacados"
+        variant="carousel"
         products={toSectionProducts(destacados, categories)} />
       <ProductSection id="masvendidos" eyebrow="Lo que más rota" title="Más vendidos"
+        variant="carousel"
         products={toSectionProducts(masVendidos, categories)} />
       <Benefits />
     </main>

@@ -47,9 +47,14 @@ export interface Product {
   /** null when the caller is not an approved user or admin */
   price: number | null
   image_url: string | null
-  /** admin-curated flags driving the home "destacados" / "más vendidos" sections */
+  /** admin-curated flags driving the home "destacados" / "más vendidos" / "novedades" sections */
   is_featured: boolean
   is_bestseller: boolean
+  is_novelty: boolean
+  /** admin-chosen order within each home section (smaller = first); null = unset (last) */
+  featured_rank: number | null
+  bestseller_rank: number | null
+  novelty_rank: number | null
   /** admin-toggled: shows a "SIN STOCK" label in the catalog and detail page */
   out_of_stock: boolean
   category_id: string | null

@@ -3,6 +3,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/Button";
 import * as Icon from "@/components/ui/Icons";
 import { ProductCard } from "@/components/product/ProductCard";
+import { ProductCarousel } from "@/components/home/ProductCarousel";
 
 /* ---------------- Hero ---------------- */
 export function Hero({ approved }: { approved: boolean }) {
@@ -72,12 +73,15 @@ export function ProductSection({
   eyebrow,
   href,
   products,
+  variant = "grid",
 }: {
   id: string;
   title: string;
   eyebrow: string;
   href?: string;
   products: SectionProduct[];
+  /** "grid" = grilla fija (4); "carousel" = estante horizontal con todos */
+  variant?: "grid" | "carousel";
 }) {
   return (
     <section id={id} className="gt-container" style={{ padding: "48px 24px 8px" }}>
@@ -92,6 +96,8 @@ export function ProductSection({
         <div style={{ color: "var(--text-muted)", fontSize: 14, padding: "24px 0 8px" }}>
           Pronto vas a ver productos en esta sección.
         </div>
+      ) : variant === "carousel" ? (
+        <ProductCarousel products={products} idPrefix={id} />
       ) : (
         <div className="gt-prod-grid">
           {products.map((p) => (

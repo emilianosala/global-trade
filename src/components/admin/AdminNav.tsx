@@ -12,6 +12,7 @@ const ITEMS: { href: string; label: string; icon: React.ComponentType<{ size?: n
   { href: "/admin", label: "Dashboard", icon: Icon.LayoutGrid },
   { href: "/admin/usuarios", label: "Usuarios", icon: Icon.Users },
   { href: "/admin/productos", label: "Productos", icon: Icon.Package },
+  { href: "/admin/destacados", label: "Destacados", icon: Icon.Star },
   { href: "/admin/categorias", label: "Categorías", icon: Icon.Tags },
 ];
 const SOON: { label: string; icon: React.ComponentType<{ size?: number }> }[] = [];

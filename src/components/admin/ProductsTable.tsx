@@ -16,7 +16,7 @@ const NO_CATEGORY = "__none__"; // valor del filtro "Sin categoría"
 export function ProductsTable({ products, categories }: { products: Product[]; categories: Category[] }) {
   const router = useRouter();
   const [q, setQ] = React.useState("");
-  const [flag, setFlag] = React.useState<"all" | "featured" | "bestseller">("all");
+  const [flag, setFlag] = React.useState<"all" | "featured" | "bestseller" | "novelty">("all");
   const [categoryId, setCategoryId] = React.useState("");
   const [page, setPage] = React.useState(1);
   const [pending, startTransition] = React.useTransition();
@@ -66,6 +66,7 @@ export function ProductsTable({ products, categories }: { products: Product[]; c
     let list = products;
     if (flag === "featured") list = list.filter((p) => p.is_featured);
     else if (flag === "bestseller") list = list.filter((p) => p.is_bestseller);
+    else if (flag === "novelty") list = list.filter((p) => p.is_novelty);
     if (categoryId === NO_CATEGORY) list = list.filter((p) => !p.category_id);
     else if (selectedSubtree) list = list.filter((p) => p.category_id && selectedSubtree.has(p.category_id));
     const s = q.trim().toLowerCase();
@@ -95,6 +96,7 @@ export function ProductsTable({ products, categories }: { products: Product[]; c
     all: products.length,
     featured: products.filter((p) => p.is_featured).length,
     bestseller: products.filter((p) => p.is_bestseller).length,
+    novelty: products.filter((p) => p.is_novelty).length,
   }), [products]);
 
   function act(id: string, fn: () => Promise<{ error?: string }>) {
@@ -138,6 +140,7 @@ export function ProductsTable({ products, categories }: { products: Product[]; c
         <FilterChip active={flag === "all"} onClick={() => setFlag("all")}>Todos ({counts.all})</FilterChip>
         <FilterChip active={flag === "featured"} onClick={() => setFlag("featured")}>Destacados ({counts.featured})</FilterChip>
         <FilterChip active={flag === "bestseller"} onClick={() => setFlag("bestseller")}>Más vendidos ({counts.bestseller})</FilterChip>
+        <FilterChip active={flag === "novelty"} onClick={() => setFlag("novelty")}>Novedades ({counts.novelty})</FilterChip>
       </div>
 
       {error && <div style={{ color: "#E57373", fontSize: 13, marginBottom: 12 }}>{error}</div>}
@@ -166,6 +169,7 @@ export function ProductsTable({ products, categories }: { products: Product[]; c
               <div style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
                 <FlagChip on={p.is_featured} label="Destacado" disabled={busy} onClick={() => act(p.id, () => updateProduct(p.id, { isFeatured: !p.is_featured }))} />
                 <FlagChip on={p.is_bestseller} label="Más vendido" disabled={busy} onClick={() => act(p.id, () => updateProduct(p.id, { isBestseller: !p.is_bestseller }))} />
+                <FlagChip on={p.is_novelty} label="Novedad" disabled={busy} onClick={() => act(p.id, () => updateProduct(p.id, { isNovelty: !p.is_novelty }))} />
                 <FlagChip on={p.out_of_stock} label="Sin stock" disabled={busy} danger onClick={() => act(p.id, () => updateProduct(p.id, { isOutOfStock: !p.out_of_stock }))} />
                 <Link href={`/admin/productos/${p.id}`} aria-label="Editar" style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: 34, height: 34, borderRadius: "var(--radius-2)", border: "1px solid var(--border-dark)", color: "var(--text-body)", textDecoration: "none" }}>
                   <Icon.SlidersHorizontal size={15} />

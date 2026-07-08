@@ -56,6 +56,7 @@ export function ProductForm({
   const [media, setMedia] = React.useState<MediaItem[]>(() => initialMediaItems(product, initialMedia));
   const [isFeatured, setIsFeatured] = React.useState(product?.is_featured ?? false);
   const [isBestseller, setIsBestseller] = React.useState(product?.is_bestseller ?? false);
+  const [isNovelty, setIsNovelty] = React.useState(product?.is_novelty ?? false);
   const [isOutOfStock, setIsOutOfStock] = React.useState(product?.out_of_stock ?? false);
   const [error, setError] = React.useState<string | null>(null);
   const [confirmOpen, setConfirmOpen] = React.useState(false);
@@ -88,6 +89,7 @@ export function ProductForm({
             categoryId: categoryId || undefined,
             isFeatured,
             isBestseller,
+            isNovelty,
             isOutOfStock,
           })
         : await createProduct({
@@ -98,6 +100,7 @@ export function ProductForm({
             categoryId: categoryId || undefined,
             isFeatured,
             isBestseller,
+            isNovelty,
             isOutOfStock,
           });
       if (res.error) {
@@ -163,6 +166,7 @@ export function ProductForm({
       <div style={{ display: "flex", gap: 20, flexWrap: "wrap", padding: "4px 0" }}>
         <Toggle checked={isFeatured} onChange={setIsFeatured} label="Destacado" />
         <Toggle checked={isBestseller} onChange={setIsBestseller} label="Más vendido" />
+        <Toggle checked={isNovelty} onChange={setIsNovelty} label="Novedad" />
         <Toggle checked={isOutOfStock} onChange={setIsOutOfStock} label="Sin stock" />
       </div>
 

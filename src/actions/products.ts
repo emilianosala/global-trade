@@ -40,6 +40,7 @@ export async function getProducts(opts?: {
   productId?: string
   featured?: boolean
   bestseller?: boolean
+  novelty?: boolean
   slug?: string
 }): Promise<{ data?: Product[]; error?: string }> {
   const supabase = await createClient()
@@ -49,6 +50,7 @@ export async function getProducts(opts?: {
     p_featured: opts?.featured ?? null,
     p_bestseller: opts?.bestseller ?? null,
     p_slug: opts?.slug ?? null,
+    p_novelty: opts?.novelty ?? null,
   })
   if (error) return { error: error.message }
   return { data: data as Product[] }
@@ -128,6 +130,7 @@ export async function createProduct(product: {
   imageUrl?: string
   isFeatured?: boolean
   isBestseller?: boolean
+  isNovelty?: boolean
   isOutOfStock?: boolean
 }): Promise<{ data?: Product; error?: string }> {
   try {
@@ -146,6 +149,7 @@ export async function createProduct(product: {
         image_url: product.imageUrl ?? null,
         is_featured: product.isFeatured ?? false,
         is_bestseller: product.isBestseller ?? false,
+        is_novelty: product.isNovelty ?? false,
         out_of_stock: product.isOutOfStock ?? false,
       })
       .select()
@@ -169,6 +173,7 @@ export async function updateProduct(
     imageUrl: string
     isFeatured: boolean
     isBestseller: boolean
+    isNovelty: boolean
     isOutOfStock: boolean
   }>
 ): Promise<{ data?: Product; error?: string }> {
@@ -186,6 +191,7 @@ export async function updateProduct(
         ...(patch.imageUrl     !== undefined && { image_url: patch.imageUrl }),
         ...(patch.isFeatured   !== undefined && { is_featured: patch.isFeatured }),
         ...(patch.isBestseller !== undefined && { is_bestseller: patch.isBestseller }),
+        ...(patch.isNovelty    !== undefined && { is_novelty: patch.isNovelty }),
         ...(patch.isOutOfStock !== undefined && { out_of_stock: patch.isOutOfStock }),
       })
       .eq('id', id)
@@ -194,6 +200,36 @@ export async function updateProduct(
     if (error) return { error: error.message }
     revalidateProducts()
     return { data: data as Product }
+  } catch (err) {
+    return { error: (err as Error).message }
+  }
+}
+
+/**
+ * Persiste el orden de una sección de la home (destacados / más vendidos):
+ * a cada producto de `orderedIds` le escribe su posición (0, 1, 2, …) en la
+ * columna de rank correspondiente. El resto de los productos no se toca.
+ */
+export async function setSectionOrder(
+  section: 'featured' | 'bestseller' | 'novelty',
+  orderedIds: string[],
+): Promise<{ error?: string }> {
+  try {
+    await requireAdmin()
+    const admin = createAdminClient()
+    const column =
+      section === 'featured' ? 'featured_rank'
+      : section === 'bestseller' ? 'bestseller_rank'
+      : 'novelty_rank'
+    const results = await Promise.all(
+      orderedIds.map((id, i) =>
+        admin.from('products').update({ [column]: i }).eq('id', id),
+      ),
+    )
+    const failed = results.find((r) => r.error)
+    if (failed?.error) return { error: failed.error.message }
+    revalidateProducts()
+    return {}
   } catch (err) {
     return { error: (err as Error).message }
   }
