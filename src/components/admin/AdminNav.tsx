@@ -55,7 +55,7 @@ export function AdminNav({ adminName }: { adminName: string }) {
           <div style={{ color: "var(--text-muted)", fontSize: 11, textTransform: "uppercase", letterSpacing: ".08em" }}>Admin</div>
           <div style={{ color: "var(--text-body)", fontSize: 13, fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{adminName}</div>
         </div>
-        <Link href="/" style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "0 10px", color: "var(--text-muted)", fontSize: 13, textDecoration: "none" }}>
+        <Link href="/" target="_blank" rel="noopener noreferrer" style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "0 10px", color: "var(--text-muted)", fontSize: 13, textDecoration: "none" }}>
           <Icon.ExternalLink size={15} /> Ver el sitio
         </Link>
         <LogoutButton />
