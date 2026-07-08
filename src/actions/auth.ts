@@ -1,8 +1,10 @@
 'use server'
 
+import { headers } from 'next/headers'
 import { createClient } from '@/lib/supabase/server'
 import { notifyAdminNewRequest } from '@/lib/resend'
 import { businessTypeLabel } from '@/lib/business'
+import { SITE_URL } from '@/lib/site'
 import type { BusinessType, Profile } from '@/lib/types'
 
 export async function registerUser({
@@ -76,6 +78,45 @@ export async function signIn({
 export async function signOut(): Promise<void> {
   const supabase = await createClient()
   await supabase.auth.signOut()
+}
+
+/**
+ * Envía el email de recuperación de contraseña. El link vuelve a /auth/callback,
+ * que canjea el código por una sesión temporal y lleva a /nueva-clave.
+ * Usa el origin del request (así funciona en localhost y en producción); si no
+ * hay origin, cae al dominio de producción.
+ */
+export async function requestPasswordReset({
+  email,
+}: {
+  email: string
+}): Promise<{ error?: string }> {
+  const supabase = await createClient()
+  const origin = (await headers()).get('origin') ?? SITE_URL
+  const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: `${origin}/auth/callback?next=/nueva-clave`,
+  })
+  if (error) return { error: error.message }
+  return {}
+}
+
+/**
+ * Cambia la contraseña del usuario con sesión activa. Sirve tanto para la
+ * sesión temporal de recuperación (tras /auth/callback) como para un usuario
+ * ya logueado que la cambia desde /cuenta.
+ */
+export async function updatePassword({
+  password,
+}: {
+  password: string
+}): Promise<{ error?: string }> {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'Not authenticated' }
+
+  const { error } = await supabase.auth.updateUser({ password })
+  if (error) return { error: error.message }
+  return {}
 }
 
 export async function getProfile(): Promise<{ data?: Profile; error?: string }> {

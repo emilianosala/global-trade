@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { getProfile } from "@/actions/auth";
 import { businessTypeLabel } from "@/lib/business";
 import { LogoutButton } from "@/components/auth/LogoutButton";
+import { ChangePasswordForm } from "@/components/auth/ChangePasswordForm";
 import { Button } from "@/components/ui/Button";
 import * as Icon from "@/components/ui/Icons";
 import type { UserStatus } from "@/lib/types";
@@ -76,6 +77,8 @@ export default async function CuentaPage() {
           <Row label="Ciudad" value={profile.city} />
           {!isAdmin && <Row label="Tipo de negocio" value={businessTypeLabel(profile.business_type)} />}
         </div>
+
+        <ChangePasswordForm />
       </div>
     </main>
   );
