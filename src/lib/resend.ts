@@ -5,6 +5,18 @@ const resend = new Resend(process.env.RESEND_API_KEY!)
 const FROM = process.env.EMAIL_FROM!
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL!
 
+/**
+ * The Resend SDK reports failures by returning `{ data: null, error }` instead
+ * of throwing, so an unchecked `await resend.emails.send(...)` swallows them
+ * silently. Throwing here lets the callers' existing try/catch do its job.
+ */
+async function send(payload: Parameters<typeof resend.emails.send>[0]) {
+  const { error } = await resend.emails.send(payload)
+  if (error) {
+    throw new Error(`Resend (${error.name}): ${error.message}`)
+  }
+}
+
 export async function notifyAdminNewRequest({
   userName,
   userEmail,
@@ -27,7 +39,7 @@ export async function notifyAdminNewRequest({
     .map(([label, value]) => `<p><strong>${label}:</strong> ${escapeHtml(value!)}</p>`)
     .join('')
 
-  await resend.emails.send({
+  await send({
     from: FROM,
     to: ADMIN_EMAIL,
     replyTo: userEmail,
@@ -47,7 +59,7 @@ export async function notifyUserApproved({
   name: string
   email: string
 }) {
-  await resend.emails.send({
+  await send({
     from: FROM,
     to: email,
     replyTo: ADMIN_EMAIL,
@@ -66,7 +78,7 @@ export async function notifyUserRejected({
   name: string
   email: string
 }) {
-  await resend.emails.send({
+  await send({
     from: FROM,
     to: email,
     replyTo: ADMIN_EMAIL,
@@ -115,7 +127,7 @@ export async function sendContactMessage({
     .map(([label, value]) => `<p><strong>${label}:</strong> ${escapeHtml(value!)}</p>`)
     .join('')
 
-  await resend.emails.send({
+  await send({
     from: FROM,
     to: ADMIN_EMAIL,
     replyTo: email,
