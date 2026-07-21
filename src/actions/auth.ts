@@ -1,6 +1,5 @@
 'use server'
 
-import { headers } from 'next/headers'
 import { createClient } from '@/lib/supabase/server'
 import { notifyAdminNewRequest } from '@/lib/resend'
 import { businessTypeLabel } from '@/lib/business'
@@ -92,9 +91,11 @@ export async function requestPasswordReset({
   email: string
 }): Promise<{ error?: string }> {
   const supabase = await createClient()
-  const origin = (await headers()).get('origin') ?? SITE_URL
+  // Behind the reverse proxy the request headers carry the internal address
+  // (localhost:3009), so the recovery link must be built from SITE_URL — the
+  // public base — and never from the request itself.
   const { error } = await supabase.auth.resetPasswordForEmail(email, {
-    redirectTo: `${origin}/auth/callback?next=/nueva-clave`,
+    redirectTo: `${SITE_URL}/auth/callback?next=/nueva-clave`,
   })
   if (error) return { error: error.message }
   return {}
