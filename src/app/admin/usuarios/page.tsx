@@ -2,6 +2,7 @@ import { getProfile } from "@/actions/auth";
 import { listAllUsers } from "@/actions/users";
 import { UsersList } from "@/components/admin/UsersList";
 import { CreateUserForm } from "@/components/admin/CreateUserForm";
+import { isOwnerEmail } from "@/lib/owner";
 
 export const metadata = { title: "Usuarios — Panel admin" };
 
@@ -9,6 +10,9 @@ export default async function AdminUsuariosPage() {
   const [profileRes, usersRes] = await Promise.all([getProfile(), listAllUsers()]);
   const selfId = profileRes.data?.id;
   const users = usersRes.data ?? [];
+  // OWNER_EMAIL solo existe en el server, así que la cuenta protegida se
+  // resuelve acá y baja al cliente como un id más.
+  const protectedId = users.find((u) => isOwnerEmail(u.email))?.id;
 
   return (
     <div>
@@ -24,7 +28,7 @@ export default async function AdminUsuariosPage() {
           No pudimos cargar los usuarios: {usersRes.error}
         </div>
       ) : (
-        <UsersList users={users} selfId={selfId} />
+        <UsersList users={users} selfId={selfId} protectedId={protectedId} />
       )}
     </div>
   );

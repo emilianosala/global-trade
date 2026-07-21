@@ -2,8 +2,9 @@
 
 import { createAdminClient } from '@/lib/supabase/admin'
 import { requireAdmin } from '@/lib/require-admin'
+import { isOwnerEmail } from '@/lib/owner'
 import { notifyUserApproved, notifyUserRejected } from '@/lib/resend'
-import type { Profile } from '@/lib/types'
+import type { Profile, UserRole } from '@/lib/types'
 
 export async function listAllUsers(): Promise<{
   data?: Profile[]
@@ -104,6 +105,63 @@ export async function rejectUser(userId: string): Promise<{ error?: string }> {
       console.error(`Failed to send rejection email to ${target.email}:`, err)
     }
 
+    return {}
+  } catch (err) {
+    return { error: (err as Error).message }
+  }
+}
+
+/**
+ * Grants or revokes admin access. Guarded so the panel cannot lock everyone
+ * out: nobody edits their own role, the protected account is untouchable, and
+ * the last remaining admin cannot be demoted.
+ */
+export async function setUserRole(
+  userId: string,
+  role: UserRole,
+): Promise<{ error?: string }> {
+  try {
+    const supabase = await requireAdmin()
+
+    // Losing your own access mid-click is never the intent.
+    const { data: { user } } = await supabase.auth.getUser()
+    if (user?.id === userId) {
+      return { error: 'No podés cambiar tu propio rol.' }
+    }
+
+    const { data: target, error: fetchError } = await supabase
+      .from('profiles')
+      .select('email, role')
+      .eq('id', userId)
+      .single()
+
+    if (fetchError || !target) return { error: 'User not found' }
+
+    if (isOwnerEmail(target.email)) {
+      return { error: 'Esta cuenta está protegida: su rol no se puede cambiar.' }
+    }
+
+    if (target.role === role) return {}
+
+    if (role === 'user') {
+      const { count, error: countError } = await supabase
+        .from('profiles')
+        .select('id', { count: 'exact', head: true })
+        .eq('role', 'admin')
+
+      if (countError) return { error: countError.message }
+      if ((count ?? 0) <= 1) {
+        return { error: 'No podés quitar el último administrador.' }
+      }
+    }
+
+    // A pending admin makes no sense, so promoting also approves.
+    const { error } = await supabase
+      .from('profiles')
+      .update(role === 'admin' ? { role, status: 'approved' } : { role })
+      .eq('id', userId)
+
+    if (error) return { error: error.message }
     return {}
   } catch (err) {
     return { error: (err as Error).message }

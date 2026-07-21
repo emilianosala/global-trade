@@ -9,7 +9,16 @@ import { formatDate } from "@/lib/format";
 import { foldText } from "@/lib/text";
 import type { Profile } from "@/lib/types";
 
-export function UsersList({ users, selfId }: { users: Profile[]; selfId?: string }) {
+export function UsersList({
+  users,
+  selfId,
+  protectedId,
+}: {
+  users: Profile[];
+  selfId?: string;
+  /** Cuenta cuyo rol no se puede cambiar desde el panel (ver lib/owner.ts). */
+  protectedId?: string;
+}) {
   const [q, setQ] = React.useState("");
 
   const filtered = React.useMemo(() => {
@@ -51,7 +60,13 @@ export function UsersList({ users, selfId }: { users: Profile[]; selfId?: string
                   <span>Alta: {formatDate(u.created_at)}</span>
                 </div>
               </div>
-              <UserActions userId={u.id} status={u.status} isSelf={u.id === selfId} />
+              <UserActions
+                userId={u.id}
+                status={u.status}
+                role={u.role}
+                isSelf={u.id === selfId}
+                isProtected={u.id === protectedId}
+              />
             </div>
           );
         })}
