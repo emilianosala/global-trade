@@ -29,7 +29,7 @@ export default function ContactoPage() {
             <a href={WA_HREF} target="_blank" rel="noopener noreferrer" style={linkStyle}>Escribinos por WhatsApp</a>
           </InfoItem>
           <InfoItem icon={<Icon.MapPin size={20} />} label="Ubicación">
-            <span style={{ color: "var(--text-body)" }}>Argentina · Envíos a todo el país</span>
+            <span style={{ color: "var(--text-body)" }}>Alberdi 942, Pérez · Envíos a todo el país</span>
           </InfoItem>
           <div style={{ marginTop: 8, borderTop: "1px solid var(--border-dark)", paddingTop: 18 }}>
             <p style={{ margin: 0, color: "var(--text-muted)", fontSize: 13.5, lineHeight: 1.6 }}>
