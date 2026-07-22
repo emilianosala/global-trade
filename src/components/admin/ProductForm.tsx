@@ -138,7 +138,7 @@ export function ProductForm({
     <form onSubmit={onSubmit} style={{ display: "flex", flexDirection: "column", gap: 16, maxWidth: 720 }}>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
         <Input label="SKU" required value={sku} onChange={(e) => setSku(e.target.value)} placeholder="Ej. ML1234" />
-        <Input label="Precio (ARS)" type="number" min={0} step="1" required value={price} onChange={(e) => setPrice(e.target.value)} placeholder="0" hint="Sin IVA, por unidad." />
+        <Input label="Precio (ARS)" type="number" min={0} step="1" required value={price} onChange={(e) => setPrice(e.target.value)} placeholder="0" hint="IVA incluido, por unidad." />
       </div>
 
       <Input label="Nombre" required value={name} onChange={(e) => setName(e.target.value)} placeholder="Nombre del producto" />

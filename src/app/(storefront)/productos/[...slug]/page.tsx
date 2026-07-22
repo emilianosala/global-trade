@@ -113,7 +113,7 @@ export default async function ProductoDetallePage({
               <>
                 <div style={{ display: "flex", alignItems: "baseline", gap: 10 }}>
                   <span style={{ fontFamily: "var(--font-brand)", fontWeight: 800, fontSize: 34, color: "#fff", lineHeight: 1 }}>{formatARS(product.price as number)}</span>
-                  <span style={{ fontSize: 13, color: "var(--text-muted)" }}>+ IVA · por unidad</span>
+                  <span style={{ fontSize: 13, color: "var(--text-muted)" }}>IVA incluido · por unidad</span>
                 </div>
                 <p style={{ margin: "10px 0 18px", color: "var(--text-muted)", fontSize: 13.5 }}>Precio mayorista. Armá tu pedido por contacto.</p>
                 <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>

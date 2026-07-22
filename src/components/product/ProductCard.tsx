@@ -145,7 +145,7 @@ export function ProductCard({
                   fontFamily: "var(--font-heading)", fontWeight: 800, fontSize: "24px",
                   color: "var(--text-strong)", lineHeight: 1,
                 }}>{formatARS(price)}</span>
-                <span style={{ fontSize: "11px", color: "var(--text-muted)" }}>+ IVA · por unidad</span>
+                <span style={{ fontSize: "11px", color: "var(--text-muted)" }}>IVA incluido · por unidad</span>
               </div>
               <Button variant="primary" size="sm" fullWidth onClick={() => router.push(href)}>Ver producto</Button>
             </div>
