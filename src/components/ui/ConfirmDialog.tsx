@@ -12,6 +12,8 @@ export function ConfirmDialog({
   title = "Confirmar",
   message,
   confirmLabel = "Eliminar",
+  pendingLabel = "Eliminando…",
+  confirmVariant = "danger",
   cancelLabel = "Cancelar",
   pending = false,
   onConfirm,
@@ -21,6 +23,10 @@ export function ConfirmDialog({
   title?: string;
   message: React.ReactNode;
   confirmLabel?: string;
+  /** Texto del botón mientras la acción está en curso. */
+  pendingLabel?: string;
+  /** Estilo del botón de confirmar; `danger` (rojo) por defecto para borrados. */
+  confirmVariant?: "primary" | "danger";
   cancelLabel?: string;
   pending?: boolean;
   onConfirm: () => void;
@@ -61,7 +67,7 @@ export function ConfirmDialog({
         <div style={{ margin: "10px 0 22px", color: "var(--text-body)", fontSize: 14.5, lineHeight: 1.5 }}>{message}</div>
         <div style={{ display: "flex", gap: 12, justifyContent: "flex-end", flexWrap: "wrap" }}>
           <Button type="button" variant="ghost" onClick={onCancel} disabled={pending}>{cancelLabel}</Button>
-          <Button type="button" variant="danger" onClick={onConfirm} disabled={pending}>{pending ? "Eliminando…" : confirmLabel}</Button>
+          <Button type="button" variant={confirmVariant} onClick={onConfirm} disabled={pending}>{pending ? pendingLabel : confirmLabel}</Button>
         </div>
       </div>
     </div>

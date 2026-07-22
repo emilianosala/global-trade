@@ -88,6 +88,10 @@ export async function rejectUser(userId: string): Promise<{ error?: string }> {
 
     if (fetchError || !target) return { error: 'User not found' }
 
+    if (isOwnerEmail(target.email)) {
+      return { error: 'Esta cuenta está protegida: no se puede rechazar.' }
+    }
+
     const { error } = await supabase
       .from('profiles')
       .update({ status: 'rejected' })
@@ -176,6 +180,16 @@ export async function deleteUser(userId: string): Promise<{ error?: string }> {
     const { data: { user } } = await supabase.auth.getUser()
     if (user?.id === userId) {
       return { error: 'No podés eliminar tu propia cuenta de administrador.' }
+    }
+
+    // The protected account must survive any panel cleanup.
+    const { data: target } = await supabase
+      .from('profiles')
+      .select('email')
+      .eq('id', userId)
+      .single()
+    if (isOwnerEmail(target?.email)) {
+      return { error: 'Esta cuenta está protegida: no se puede eliminar.' }
     }
 
     const admin = createAdminClient()

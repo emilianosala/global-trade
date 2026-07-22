@@ -59,7 +59,7 @@ export function UserActions({
         {status !== "approved" && (
           <Button size="sm" variant="primary" disabled={pending} onClick={() => run(() => approveUser(userId))} iconLeft={<Icon.Check size={15} />}>Aprobar</Button>
         )}
-        {status !== "rejected" && (
+        {status !== "rejected" && !isProtected && (
           <Button size="sm" variant="secondary" disabled={pending} onClick={() => run(() => rejectUser(userId))}>Rechazar</Button>
         )}
         {canChangeRole && (
@@ -67,7 +67,7 @@ export function UserActions({
             {isAdmin ? "Quitar admin" : "Hacer admin"}
           </Button>
         )}
-        {!isSelf && (
+        {!isSelf && !isProtected && (
           <Button size="sm" variant="ghost" disabled={pending} onClick={() => setConfirmOpen(true)} aria-label="Eliminar"><Icon.Trash size={15} /></Button>
         )}
       </div>
@@ -83,6 +83,9 @@ export function UserActions({
             <>Esta persona va a poder ver y editar productos, y aprobar o eliminar usuarios. Si su cuenta estaba pendiente, queda aprobada.</>
           )
         }
+        confirmLabel={isAdmin ? "Quitar admin" : "Hacer admin"}
+        pendingLabel="Guardando…"
+        confirmVariant="primary"
         pending={pending}
         onConfirm={confirmRoleChange}
         onCancel={() => setRoleConfirmOpen(false)}
